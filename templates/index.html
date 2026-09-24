@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thỏ Ngọc &amp; Kỳ Lân vs Zombie – Đêm Trung Thu</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div id="app">
+    <div id="toolbar">
+      <span id="level-title">Thỏ Ngọc &amp; Kỳ Lân vs Zombie</span>
+      <div class="tb-buttons">
+        <button id="btn-speed" title="Tốc độ">x1</button>
+        <button id="btn-mute" title="Âm thanh">🔊</button>
+        <button id="btn-pause" title="Tạm dừng (Esc)">⏸ Dừng</button>
+        <button id="btn-menu" title="Về menu">☰ Menu</button>
+      </div>
+    </div>
+
+    <div id="stage">
+      <canvas id="game"></canvas>
+
+      <!-- Màn hình chính -->
+      <div id="screen-title" class="overlay show">
+        <div class="title-box">
+          <div class="moon-deco"></div>
+          <h1>Thỏ Ngọc <span>&amp;</span> Kỳ Lân<br><small>vs</small> ZOMBIE</h1>
+          <p class="subtitle">~ Bảo vệ Đêm Trung Thu ~</p>
+          <button class="big-btn" id="btn-start">Bắt đầu phiêu lưu</button>
+          <div id="level-select"></div>
+          <button class="small-btn" id="btn-reset">Chơi lại từ đầu</button>
+          <p class="hint">Bấm vào thẻ nhân vật rồi bấm lên sân để đặt. Bấm Ánh Trăng để nhặt.<br>
+            Chuột phải / Esc để huỷ chọn. Dùng xẻng để dọn ô.</p>
+        </div>
+      </div>
+
+      <!-- Hội thoại cốt truyện -->
+      <div id="screen-story" class="overlay">
+        <div class="story-box">
+          <canvas id="portrait" width="160" height="160"></canvas>
+          <div class="story-text">
+            <div id="story-name"></div>
+            <div id="story-line"></div>
+            <div class="story-next">Bấm để tiếp tục ▶</div>
+          </div>
+        </div>
+        <button class="small-btn skip" id="btn-skip">Bỏ qua ⏭</button>
+      </div>
+
+      <!-- Tạm dừng -->
+      <div id="screen-pause" class="overlay">
+        <div class="panel">
+          <h2>Tạm dừng</h2>
+          <button class="big-btn" id="btn-resume">Tiếp tục</button>
+          <button class="small-btn" id="btn-restart">Chơi lại màn này</button>
+          <button class="small-btn" id="btn-quit">Về menu</button>
+        </div>
+      </div>
+
+      <!-- Thua -->
+      <div id="screen-lose" class="overlay">
+        <div class="panel lose">
+          <h2>LŨ ZOMBIE ĐÃ ĂN MẤT<br>BÁNH TRUNG THU CỦA BẠN!</h2>
+          <p>...và cả NÃO nữa!</p>
+          <button class="big-btn" id="btn-retry">Thử lại</button>
+          <button class="small-btn" id="btn-lose-menu">Về menu</button>
+        </div>
+      </div>
+
+      <!-- Thắng -->
+      <div id="screen-win" class="overlay">
+        <div class="panel win">
+          <h2 id="win-title">Chiến thắng!</h2>
+          <canvas id="reward-canvas" width="180" height="180"></canvas>
+          <p id="win-text"></p>
+          <button class="big-btn" id="btn-next">Màn tiếp theo</button>
+          <button class="small-btn" id="btn-win-menu">Về menu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+</body>
+</html>
