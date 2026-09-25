@@ -18,6 +18,38 @@ python app.py
 
 Mở trình duyệt tại <http://localhost:5000>.
 
+## Đưa game lên mạng (chạy ngoài localhost)
+
+### Cách 1: GitHub Pages (miễn phí, link cố định, không cần server)
+Game chạy hoàn toàn trên trình duyệt, nên có thể đóng gói thành 1 file HTML tĩnh:
+
+```bash
+python build_static.py   # tạo dist/index.html, mở trực tiếp bằng trình duyệt cũng chơi được
+```
+
+Repo đã có sẵn workflow `.github/workflows/pages.yml` để tự đăng lên GitHub Pages:
+1. Merge code vào nhánh `main`.
+2. Vào repo trên GitHub: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+3. Chờ tab **Actions** chạy xong. Game sẽ có ở `https://<tên-tài-khoản>.github.io/fun-app/`.
+
+### Cách 2: Render.com (chạy đúng server Flask)
+1. Đăng nhập https://render.com bằng GitHub.
+2. **New → Blueprint**, chọn repo này. Render đọc file `render.yaml` và chạy `gunicorn app:app`.
+3. Sau vài phút sẽ có link dạng `https://tho-ngoc-vs-zombie.onrender.com`.
+   (Gói miễn phí sẽ "ngủ" khi không có ai truy cập, lần mở đầu tiên chờ khoảng 30–60 giây.)
+
+### Cách 3: Chia sẻ tạm từ máy của bạn (ngrok / Cloudflare Tunnel)
+Giữ `python app.py` đang chạy, mở Terminal khác và chạy một trong hai lệnh:
+
+```bash
+cloudflared tunnel --url http://localhost:5000   # không cần tài khoản
+ngrok http 5000                                  # cần đăng ký ngrok miễn phí
+```
+
+Lệnh sẽ in ra một link `https://...` cho người khác vào chơi. Tắt máy hoặc tắt lệnh là link ngừng hoạt động.
+
+> Không bật `FLASK_DEBUG=1` khi mở server ra Internet: chế độ debug cho phép người khác chạy code trên máy bạn.
+
 ## Cách chơi
 
 - Bấm **Ánh Trăng** (tương đương Mặt Trời) để nhặt. Ánh Trăng rơi từ trời và do Thỏ Ngọc Giã Trăng tạo ra.
@@ -80,6 +112,8 @@ Tiến độ mở khoá màn được lưu trong trình duyệt (localStorage).
 
 ```
 app.py               # Flask: trang chính + API /api/game-data
+build_static.py      # Đóng gói game thành 1 file HTML tĩnh (dist/index.html)
+render.yaml          # Cấu hình deploy lên Render.com
 game_data.py         # Chỉ số nhân vật, zombie, đợt tấn công & cốt truyện 3 màn
 templates/index.html # Giao diện (menu, hội thoại, thắng/thua)
 static/css/style.css
