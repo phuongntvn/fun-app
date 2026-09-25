@@ -2783,6 +2783,7 @@
 
   function drawRewardIcon(c, id, t) {
     if (id === 'quan_ran_ri') { c.save(); c.scale(0.75, 0.75); drawCamoPants(c, t); c.restore(); return; }
+    if (id === 'gift_box') { c.save(); c.scale(0.5, 0.5); c.translate(0, -30); drawGiftBox(c, t, false); c.restore(); return; }
     if (id === 'trophy') {
       ell(c, 0, 0, 60, 60, 'rgba(255,235,59,.25)');
       c.save(); c.scale(1.3, 1.3);
@@ -2814,9 +2815,11 @@
       ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(0, -80); ctx.lineTo(8, 0); ctx.fill();
     }
     ctx.restore();
-    drawRewardIcon(ctx, g.L.reward, g.t);
+    // màn cuối: chỉ rơi ra hộp quà đóng kín, phải mở hộp mới biết bên trong là gì
+    const lastLevel = g.idx === DATA.levels.length - 1;
+    drawRewardIcon(ctx, lastLevel ? 'gift_box' : g.L.reward, g.t);
     ctx.restore();
-    if (!r.taken) text(ctx, 'Bấm để nhận!', r.x, r.y + 64, 18, '#fff59d', 'center', '#4a2000');
+    if (!r.taken) text(ctx, lastLevel ? 'Bấm để nhận hộp quà!' : 'Bấm để nhận!', r.x, r.y + 64, 18, '#fff59d', 'center', '#4a2000');
   }
 
   function drawPortrait(c, who, t) {
