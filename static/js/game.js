@@ -2972,7 +2972,7 @@
       b.className = 'lvl-card' + (locked ? ' locked' : '');
       const won = progress.won.includes(L.id);
       b.innerHTML = `<span class="num">${locked ? '🔒' : L.id}</span>${L.name.replace(/^Màn \d+: /, '')}` +
-        `<span class="stars">${won ? '🏮 Đã thắng' : locked ? 'Chưa mở' : i === DATA.levels.length - 1 ? '🎁 Hộp quà bí mật' : 'Sẵn sàng'}</span>`;
+        `<span class="stars">${won ? '🏮 Đã thắng' : locked ? 'Chưa mở' : i === DATA.levels.length - 1 ? '⭐ Màn cuối' : 'Sẵn sàng'}</span>`;
       b.disabled = locked;
       b.addEventListener('click', () => startStory(i));
       box.appendChild(b);

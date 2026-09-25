@@ -210,7 +210,7 @@ ZOMBIES = {
 # ---------------------------------------------------------------------------
 CHEERS = {
     "start": [
-        "Cố lên! Hộp quà bí mật đang chờ ở cuối đêm nay!",
+        "Cố lên! Đêm nay ta trông cậy cả vào các bạn đấy!",
         "Ta tin các bạn! Giữ vững từng hàng nhé!",
         "Nhặt thật nhiều Ánh Trăng vào, trận này ta thắng chắc!",
     ],
@@ -221,7 +221,7 @@ CHEERS = {
     ],
     "half": [
         "Đã qua nửa trận rồi! Cố thêm chút nữa thôi!",
-        "Giỏi lắm! Hộp quà bí mật lại gần thêm một bước!",
+        "Giỏi lắm! Cứ đà này thì lũ zombie chẳng làm gì được ta!",
     ],
     "mower": [
         "Ối! Suýt nữa thì toang! Gia cố hàng đó ngay!",
@@ -232,11 +232,11 @@ CHEERS = {
         "Chỉ còn đợt này thôi! Dốc hết sức nào!",
     ],
     "win_level": [
-        "Tuyệt vời! Còn {left} màn nữa là được mở HỘP QUÀ BÍ MẬT!",
-        "Quá đỉnh! Chỉ còn {left} màn nữa thôi, hộp quà bí mật đang chờ bạn!",
+        "Tuyệt vời! Còn {left} màn nữa là bảo vệ được ông chủ trọn đêm nay!",
+        "Quá đỉnh! Chỉ còn {left} màn nữa thôi, trụ tới cùng nhé!",
     ],
     "lose": [
-        "Đừng bỏ cuộc! Hộp quà bí mật của ông chủ Phương vẫn đang chờ bạn!",
+        "Đừng bỏ cuộc! Ông chủ Phương vẫn đang trông cậy vào bạn!",
         "Thua keo này ta bày keo khác! Thử lại nào, lần này chắc chắn thắng!",
         "Suýt nữa thôi! Chỉnh lại đội hình một chút là qua được ngay!",
     ],
@@ -293,7 +293,7 @@ LEVELS = [
             {"who": "tho", "text": "Thỏ Ngọc Giã Trăng tạo ra ÁNH TRĂNG. Hãy bấm để nhặt, rồi dùng nó gọi thêm đồng đội nhé!"},
             {"who": "cuoi", "text": "Zombie gục xuống đôi khi làm rơi BẢO VẬT. Nhặt về, rồi dùng ở thanh dưới cùng! Bánh Trung Thu Thần làm đồng minh mạnh gấp bội."},
             {"who": "phuong", "text": "Trăm sự nhờ các bạn! Đừng để con zombie nào bước vào nhà ta!"},
-            {"who": "phuong", "text": "À còn nữa: ai bảo vệ được nhà ta qua trọn 3 màn đêm nay sẽ được mở HỘP QUÀ BÍ MẬT của ta. Quà xịn lắm đấy!"},
+            {"who": "phuong", "text": "Đêm nay dài lắm, lũ zombie sẽ kéo tới suốt 3 đợt. Ta tin các bạn sẽ trụ vững tới cuối cùng!"},
         ],
     },
     {
@@ -329,7 +329,7 @@ LEVELS = [
             {"who": "cuoi", "text": "...và cả QUÁI VẬT THIÊN CẨU, con chó trời chuyên ăn trăng! Nó cắn một phát là đồng minh tiêu luôn!"},
             {"who": "hang", "text": "Chó Bưởi Ngoạm nuốt chửng được cả Thiên Cẩu. Hạt Dẻ Gai thì đâm chân zombie đi ngang qua."},
             {"who": "tho", "text": "Thỏ Tuyết bắn chè đông lạnh làm chậm kẻ địch, còn Đèn Ông Sao Nổ thì... BÙMMM!"},
-            {"who": "phuong", "text": "Các bạn đã đi được 1/3 chặng đường rồi! Hộp quà bí mật đang được ta cất kỹ trong nhà, chỉ còn 2 màn nữa thôi. Cố lên!"},
+            {"who": "phuong", "text": "Các bạn đã đi được 1/3 chặng đường rồi! Chỉ còn 2 màn nữa thôi, cố lên!"},
         ],
     },
     {
@@ -371,11 +371,11 @@ LEVELS = [
             {"who": "hang", "text": "Kỳ Lân Cầu Vồng, Lò Nướng Bánh và Thỏ Ba Lồng Đèn đã tới giúp. Hãy chọn đội hình thật khéo!"},
             {"who": "tho", "text": "Đêm tối nên Ánh Trăng rơi ít hơn. Trồng nhiều Thỏ Ngọc Giã Trăng nhé!"},
             {"who": "phuong", "text": "Đêm nay là đêm trăng đẹp nhất năm. Ta tin các bạn, bảo vệ nhà ta đến cùng nhé!"},
-            {"who": "phuong", "text": "Đây là màn cuối cùng! Thắng màn này là được mở HỘP QUÀ BÍ MẬT, bên trong là bảo vật quý nhất của ta. Không được bỏ cuộc nhé!"},
+            {"who": "phuong", "text": "Đây là màn cuối cùng! Thắng màn này là ta an toàn trọn đêm nay. Không được bỏ cuộc nhé!"},
         ],
         "ending": [
             {"who": "hang", "text": "Tuyệt vời! Lũ zombie và Thiên Cẩu đã chạy mất dép. Trăng rằm vẫn sáng vằng vặc!"},
-            {"who": "phuong", "text": "Cảm ơn các bạn đã bảo vệ ta và cả mâm cỗ! Giờ là lúc ta giữ lời hứa..."},
+            {"who": "phuong", "text": "Cảm ơn các bạn đã bảo vệ ta và cả mâm cỗ! À... ta có một thứ muốn tặng các bạn."},
             {"who": "phuong", "text": "Đây là HỘP QUÀ BÍ MẬT. Bên trong là bảo vật quý nhất của ta. Hãy tự tay mở nó nào!"},
         ],
         "ending_after": [
