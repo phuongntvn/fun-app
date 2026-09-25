@@ -50,7 +50,7 @@ html, body {
 #stage {
   position: relative;
   width: 100%;
-  aspect-ratio: 1000 / 600;
+  aspect-ratio: 1000 / 650;
   border: 4px solid #3e230a;
   border-radius: 10px;
   overflow: hidden;
@@ -198,7 +198,7 @@ html, body {
 #story-name { font-weight: bold; color: #c62828; font-size: clamp(14px, 2.2vw, 20px); }
 #story-line { font-size: clamp(13px, 2.2vw, 20px); margin: 6px 0; min-height: 2.6em; line-height: 1.35; }
 .story-next { text-align: right; font-size: 12px; color: #8d6e63; animation: blink 1s infinite; }
-.skip { position: absolute; top: 10px; right: 10px; }
+.skip { position: absolute; top: 17%; right: 10px; }
 
 @keyframes blink { 50% { opacity: .3; } }
 
@@ -218,3 +218,42 @@ html, body {
 #reward-canvas { width: clamp(90px, 16vw, 160px); height: clamp(90px, 16vw, 160px); }
 
 .moon-deco { display: none; }
+
+/* Chọn đội hình */
+.panel.select { max-width: 96%; max-height: 96%; overflow-y: auto; padding: 12px 16px; }
+.panel.select h2 { margin: 2px 0 4px; }
+.panel.select p { margin: 4px 0 8px; font-size: clamp(11px, 1.6vw, 15px); }
+.seed-row, .seed-grid { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.seed-row {
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  background: #3a2410;
+  border: 2px solid #8a5a30;
+}
+.seed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ffe0b2;
+  font: inherit;
+  font-size: clamp(9px, 1.2vw, 11px);
+  width: clamp(44px, 7vw, 66px);
+}
+.seed canvas { width: 100%; height: auto; display: block; }
+.seed span { line-height: 1.1; text-align: center; }
+.seed.empty {
+  aspect-ratio: 62 / 88;
+  border: 2px dashed #8a5a30;
+  border-radius: 7px;
+  cursor: default;
+}
+.seed.used canvas { filter: grayscale(1) brightness(.5); }
+.seed:not(.empty):hover canvas { transform: translateY(-2px); }
+.seed:focus-visible { outline: 3px solid #ffd54f; outline-offset: 2px; }
+#btn-go:disabled { filter: grayscale(1); cursor: not-allowed; }
