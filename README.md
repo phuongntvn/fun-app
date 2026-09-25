@@ -2,7 +2,7 @@
 
 Game thủ thành trên web, lối chơi mô phỏng **Plants vs. Zombies** nhưng mang chủ đề **Trung Thu**.
 
-**Cốt truyện:** Ông chủ Phương mở tiệc Trung Thu tại nhà thì lũ zombie kéo tới đòi ăn bánh... và ăn não ông chủ!
+**Cốt truyện:** Ông chủ Phương mở tiệc Trung Thu tại nhà thì lũ zombie kéo tới đòi phá tiệc, ăn sạch mâm cỗ!
 Chú Cuội báo tin, Chị Hằng cử các bé Thỏ Ngọc và Kỳ Lân từ Cung Trăng xuống bảo vệ ông chủ Phương.
 Ông chủ đứng ngay trước cửa nhà trong trận (run lẩy bẩy khi zombie tới gần), zombie lọt vào nhà là thua.
 

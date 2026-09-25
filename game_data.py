@@ -288,7 +288,7 @@ LEVELS = [
         "reward": "tho_bang",
         "story": [
             {"who": "phuong", "text": "Tối nay nhà ta mở tiệc Trung Thu! Bánh nướng, bánh dẻo, mâm ngũ quả bày đầy cả sân rồi."},
-            {"who": "cuoi", "text": "Ông chủ Phương ơi, nguy to! Lũ Zombie ngửi thấy mùi bánh... và cả mùi NÃÃÃO của ông chủ nữa!"},
+            {"who": "cuoi", "text": "Ông chủ Phương ơi, nguy to! Lũ Zombie ngửi thấy mùi bánh nướng, bánh dẻo, đang kéo cả đàn tới phá tiệc!"},
             {"who": "hang", "text": "Đừng sợ! Ta đã cử các bé Thỏ Ngọc từ Cung Trăng xuống bảo vệ ông chủ Phương."},
             {"who": "tho", "text": "Thỏ Ngọc Giã Trăng tạo ra ÁNH TRĂNG. Hãy bấm để nhặt, rồi dùng nó gọi thêm đồng đội nhé!"},
             {"who": "cuoi", "text": "Zombie gục xuống đôi khi làm rơi BẢO VẬT. Nhặt về, rồi dùng ở thanh dưới cùng! Bánh Trung Thu Thần làm đồng minh mạnh gấp bội."},
