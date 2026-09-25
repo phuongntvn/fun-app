@@ -257,3 +257,27 @@ html, body {
 .seed:not(.empty):hover canvas { transform: translateY(-2px); }
 .seed:focus-visible { outline: 3px solid #ffd54f; outline-offset: 2px; }
 #btn-go:disabled { filter: grayscale(1); cursor: not-allowed; }
+
+[hidden] { display: none !important; }
+
+/* Lời cổ vũ */
+.gift-teaser {
+  margin: 0 0 10px;
+  font-size: clamp(12px, 1.8vw, 16px);
+  color: #fff59d;
+}
+.panel .cheer { color: #fff59d; font-weight: bold; }
+.panel .tip { color: #d7ccc8; font-size: clamp(11px, 1.6vw, 14px); font-style: italic; }
+
+/* Hộp quà */
+.panel.gift { max-width: 92%; padding: 12px 20px; }
+.panel.gift h2 { margin: 2px 0 4px; }
+#gift-canvas {
+  display: block;
+  margin: 0 auto;
+  width: min(360px, 70vw);
+  max-width: 100%;
+  height: auto;
+  cursor: pointer;
+}
+#gift-hint { margin: 4px 0 8px; min-height: 1.4em; font-weight: bold; color: #fff59d; }

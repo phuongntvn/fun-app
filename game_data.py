@@ -204,6 +204,55 @@ ZOMBIES = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Lời cổ vũ của ông chủ Phương trong trận, khi thắng/thua, và mẹo chơi.
+# {left} được thay bằng số màn còn lại.
+# ---------------------------------------------------------------------------
+CHEERS = {
+    "start": [
+        "Cố lên! Hộp quà bí mật đang chờ ở cuối đêm nay!",
+        "Ta tin các bạn! Giữ vững từng hàng nhé!",
+        "Nhặt thật nhiều Ánh Trăng vào, trận này ta thắng chắc!",
+    ],
+    "flag": [
+        "Đợt lớn tới rồi! Bình tĩnh, giữ vững hàng!",
+        "Chúng đông quá... nhưng các bạn làm được mà!",
+        "Dùng bảo vật đi! Lúc này là lúc cần nhất đấy!",
+    ],
+    "half": [
+        "Đã qua nửa trận rồi! Cố thêm chút nữa thôi!",
+        "Giỏi lắm! Hộp quà bí mật lại gần thêm một bước!",
+    ],
+    "mower": [
+        "Ối! Suýt nữa thì toang! Gia cố hàng đó ngay!",
+        "Xe đèn đã cứu một lần, lần sau không còn đâu, cẩn thận nhé!",
+    ],
+    "final": [
+        "ĐỢT CUỐI RỒI! Thắng đợt này là xong màn!",
+        "Chỉ còn đợt này thôi! Dốc hết sức nào!",
+    ],
+    "win_level": [
+        "Tuyệt vời! Còn {left} màn nữa là được mở HỘP QUÀ BÍ MẬT!",
+        "Quá đỉnh! Chỉ còn {left} màn nữa thôi, hộp quà bí mật đang chờ bạn!",
+    ],
+    "lose": [
+        "Đừng bỏ cuộc! Hộp quà bí mật của ông chủ Phương vẫn đang chờ bạn!",
+        "Thua keo này ta bày keo khác! Thử lại nào, lần này chắc chắn thắng!",
+        "Suýt nữa thôi! Chỉnh lại đội hình một chút là qua được ngay!",
+    ],
+}
+
+TIPS = [
+    "Mẹo: trồng 2 cột Thỏ Ngọc Giã Trăng thật sớm để có nhiều Ánh Trăng.",
+    "Mẹo: đặt Bánh Nướng Khổng Lồ phía trước để Zombie Múa Lân nhảy qua nó thay vì thỏ bắn.",
+    "Mẹo: để dành Bánh Trung Thu Thần cho lúc đợt zombie lớn tới.",
+    "Mẹo: Chó Bưởi Ngoạm nuốt chửng được cả Quái Vật Thiên Cẩu.",
+    "Mẹo: đặt Lò Nướng Bánh ngay trước hàng thỏ bắn để nhân đôi sát thương.",
+    "Mẹo: Đèn Ông Sao Nổ hạ được Ông Địa khi kết hợp thêm vài phát bắn.",
+    "Mẹo: Gió Cung Trăng đẩy lùi zombie đang sắp vào nhà, dùng khi nguy cấp.",
+]
+
+
 def _w(*groups):
     """Tiện ích: _w((3, 'thuong'), (1, 'non_la')) -> ['thuong', 'thuong', 'thuong', 'non_la']."""
     out = []
@@ -244,6 +293,7 @@ LEVELS = [
             {"who": "tho", "text": "Thỏ Ngọc Giã Trăng tạo ra ÁNH TRĂNG. Hãy bấm để nhặt, rồi dùng nó gọi thêm đồng đội nhé!"},
             {"who": "cuoi", "text": "Zombie gục xuống đôi khi làm rơi BẢO VẬT. Nhặt về, rồi dùng ở thanh dưới cùng! Bánh Trung Thu Thần làm đồng minh mạnh gấp bội."},
             {"who": "phuong", "text": "Trăm sự nhờ các bạn! Đừng để con zombie nào bước vào nhà ta!"},
+            {"who": "phuong", "text": "À còn nữa: ai bảo vệ được nhà ta qua trọn 3 màn đêm nay sẽ được mở HỘP QUÀ BÍ MẬT của ta. Quà xịn lắm đấy!"},
         ],
     },
     {
@@ -279,6 +329,7 @@ LEVELS = [
             {"who": "cuoi", "text": "...và cả QUÁI VẬT THIÊN CẨU, con chó trời chuyên ăn trăng! Nó cắn một phát là đồng minh tiêu luôn!"},
             {"who": "hang", "text": "Chó Bưởi Ngoạm nuốt chửng được cả Thiên Cẩu. Hạt Dẻ Gai thì đâm chân zombie đi ngang qua."},
             {"who": "tho", "text": "Thỏ Tuyết bắn chè đông lạnh làm chậm kẻ địch, còn Đèn Ông Sao Nổ thì... BÙMMM!"},
+            {"who": "phuong", "text": "Các bạn đã đi được 1/3 chặng đường rồi! Hộp quà bí mật đang được ta cất kỹ trong nhà, chỉ còn 2 màn nữa thôi. Cố lên!"},
         ],
     },
     {
@@ -320,12 +371,15 @@ LEVELS = [
             {"who": "hang", "text": "Kỳ Lân Cầu Vồng, Lò Nướng Bánh và Thỏ Ba Lồng Đèn đã tới giúp. Hãy chọn đội hình thật khéo!"},
             {"who": "tho", "text": "Đêm tối nên Ánh Trăng rơi ít hơn. Trồng nhiều Thỏ Ngọc Giã Trăng nhé!"},
             {"who": "phuong", "text": "Đêm nay là đêm trăng đẹp nhất năm. Ta tin các bạn, bảo vệ nhà ta đến cùng nhé!"},
-            {"who": "phuong", "text": "À, ai giữ được nhà ta tới sáng, ta sẽ tặng BẢO VẬT quý nhất của ta. Cố lên!"},
+            {"who": "phuong", "text": "Đây là màn cuối cùng! Thắng màn này là được mở HỘP QUÀ BÍ MẬT, bên trong là bảo vật quý nhất của ta. Không được bỏ cuộc nhé!"},
         ],
         "ending": [
             {"who": "hang", "text": "Tuyệt vời! Lũ zombie và Thiên Cẩu đã chạy mất dép. Trăng rằm vẫn sáng vằng vặc!"},
-            {"who": "phuong", "text": "Cảm ơn các bạn đã bảo vệ ta và cả mâm cỗ! Giờ đến lúc trao phần thưởng như đã hứa."},
-            {"who": "phuong", "show": "quan_ran_ri", "text": "Đây là bảo vật quý nhất của ta: chiếc QUẦN TÚI HỘP RẰN RI ống rộng! Túi hộp to đến mức đựng vừa cả chục cái bánh nướng!"},
+            {"who": "phuong", "text": "Cảm ơn các bạn đã bảo vệ ta và cả mâm cỗ! Giờ là lúc ta giữ lời hứa..."},
+            {"who": "phuong", "text": "Đây là HỘP QUÀ BÍ MẬT. Bên trong là bảo vật quý nhất của ta. Hãy tự tay mở nó nào!"},
+        ],
+        "ending_after": [
+            {"who": "phuong", "show": "quan_ran_ri", "text": "Tada! Chiếc QUẦN TÚI HỘP RẰN RI ống rộng huyền thoại! Túi hộp to đến mức đựng vừa cả chục cái bánh nướng!"},
             {"who": "phuong", "show": "quan_ran_ri", "text": "Người giữ được nhà ta đêm nay mới xứng đáng mặc nó. Từ giờ chiếc quần này là của bạn!"},
             {"who": "tho", "text": "Oaaa! Mặc quần này đi rước đèn thì ngầu nhất xóm luôn!"},
             {"who": "cuoi", "text": "Hừm... quần thì nhường người chiến thắng, ta chỉ xin một miếng bánh nướng thập cẩm thôi!"},
@@ -340,6 +394,8 @@ def get_game_data():
         "zombies": ZOMBIES,
         "items": ITEMS,
         "levels": LEVELS,
+        "cheers": CHEERS,
+        "tips": TIPS,
         "config": {
             "item_drop_chance": ITEM_DROP_CHANCE,
             "max_item_stock": MAX_ITEM_STOCK,

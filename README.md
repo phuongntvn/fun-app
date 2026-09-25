@@ -105,7 +105,12 @@ Lệnh sẽ in ra một link `https://...` cho người khác vào chơi. Tắt 
 1. **Chiều Rằm Tháng Tám** – ban ngày, làm quen; thắng nhận Thỏ Tuyết.
 2. **Hoàng Hôn Rước Đèn** – xuất hiện Nồi Đồng, Múa Lân và Quái Vật Thiên Cẩu; thắng nhận Kỳ Lân Cầu Vồng.
 3. **Đêm Trăng Tròn Quyết Chiến** – ban đêm, ít Ánh Trăng, Ông Địa Khổng Lồ ném Zombie Nhóc; chọn 9 trong 12 đồng minh.
-   Thắng màn cuối, ông chủ Phương trao tặng **chiếc Quần Túi Hộp Rằn Ri ống rộng**, bảo vật quý nhất của ông, cho người đã bảo vệ nhà mình.
+   Thắng màn cuối, người chơi được tự tay mở **Hộp Quà Bí Mật** (bấm 3 lần, hộp rung, trống dồn, nắp bật tung)
+   để nhận **chiếc Quần Túi Hộp Rằn Ri ống rộng**, bảo vật quý nhất của ông chủ Phương.
+
+Suốt 3 màn, ông chủ Phương luôn cổ vũ người chơi: nhắc tới hộp quà ở đầu mỗi màn, hiện bong bóng thoại khi có đợt lớn,
+qua nửa trận hay xe đèn phải ra cứu, báo số màn còn lại khi thắng, và động viên kèm mẹo chơi khi thua.
+Nội dung các câu cổ vũ và mẹo nằm trong `CHEERS` và `TIPS` ở `game_data.py`.
 
 Tiến độ mở khoá màn được lưu trong trình duyệt (localStorage).
 

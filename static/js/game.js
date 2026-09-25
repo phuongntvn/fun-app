@@ -109,6 +109,9 @@
     power: () => [523, 784, 1046, 1318].forEach((f, i) => tone(f, 0.18, 'triangle', 0.12, 0, i * 0.06)),
     meteor: () => { tone(1400, 0.6, 'sine', 0.08, -1100); noise(0.5, 0.2); },
     wind: () => noise(0.9, 0.18),
+    tick: (n) => { tone(420 + n * 160, 0.14, 'triangle', 0.18); tone(840 + n * 320, 0.1, 'sine', 0.08, 0, 0.05); },
+    drumroll: () => { for (let i = 0; i < 16; i++) tone(95 + (i % 2) * 12, 0.05, 'square', 0.07 + i * 0.004, 0, i * 0.068); },
+    fanfare: () => { [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, 0.35, 'triangle', 0.16, 0, i * 0.11)); noise(0.4, 0.12); },
   };
 
   // --------------------------------------------------------------- tiện ích vẽ
@@ -1636,9 +1639,19 @@
     g.sinceWave = 0;
     if (isFlag) sfx.wave();
     if (list.includes('thien_cau')) sfx.howl();
-    if (i === g.L.waves.length - 1) {
+    const total = g.L.waves.length;
+    if (i === total - 1) {
       g.banner = { text: 'ĐỢT CUỐI CÙNG!', t: 0, dur: 3, color: '#ff5252', size: 58 };
-    }
+      cheer('final');
+    } else if (isFlag) cheer('flag');
+    else if (i === Math.floor(total / 2)) cheer('half');
+  }
+
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  function cheer(kind) {
+    const list = DATA.cheers && DATA.cheers[kind];
+    if (!game || !list || !list.length) return;
+    game.cheer = { text: pick(list), t: 0, dur: 4 };
   }
 
   function aliveZombieHp() {
@@ -1736,19 +1749,20 @@
     const g = game;
     if (g.state === 'ready') {
       g.readyT += dt;
-      if (g.readyT > 2.4) g.state = 'playing';
+      if (g.readyT > 2.4) { g.state = 'playing'; cheer('start'); }
       return;
     }
     g.t += dt;
     if (g.shake > 0) g.shake -= dt;
     if (g.banner) { g.banner.t += dt; if (g.banner.t > g.banner.dur) g.banner = null; }
+    if (g.cheer) { g.cheer.t += dt; if (g.cheer.t > g.cheer.dur) g.cheer = null; }
     updateMood();
 
     if (g.state === 'lost') {
       g.loseT += dt;
       if (g.loser) { g.loser.x -= 25 * dt; g.loser.anim += dt; }
       for (const f of g.fx) f.t += dt;
-      if (g.loseT > 2.4 && !g.loseShown) { g.loseShown = true; showOverlay('screen-lose'); }
+      if (g.loseT > 2.4 && !g.loseShown) { g.loseShown = true; showLose(); }
       return;
     }
 
@@ -2034,7 +2048,7 @@
 
       if (z.x < LAWN_X - 6) {
         const m = g.mowers[z.row];
-        if (m.state === 'idle') { m.state = 'run'; sfx.mower(); }
+        if (m.state === 'idle') { m.state = 'run'; sfx.mower(); cheer('mower'); }
         else if (m.state === 'gone' && z.x < LAWN_X - 60 && g.state === 'playing') {
           g.state = 'lost'; g.loseT = 0; g.loser = z; g.selected = null; g.shovel = false; g.itemSel = null;
           g.fx.push({ kind: 'text', x: PHUONG_POS.x + 40, y: PHUONG_POS.y - 120, t: 0, life: 2.4, text: 'Cứu tôi với!!', color: '#ffffff' });
@@ -2553,6 +2567,7 @@
     const moodTxt = g.mood === 'panic' ? 'NGUY HIỂM!' : g.mood === 'scared' ? 'Lo lắng...' : 'Đang vui vẻ';
     rrect(ctx, pp.x + 82, pp.y + 54, 108, 24, 12, moodCol);
     text(ctx, moodTxt, pp.x + 136, pp.y + 66, 13, '#1a0f05');
+    if (g.cheer) drawCheerBubble(g.cheer);
 
     // dải dưới: bảo vật + tiến trình
     rrect(ctx, 2, LAWN_B + 1, W - 4, H - LAWN_B - 3, 10, '#6d4424', '#2e1a08', 3);
@@ -2611,6 +2626,32 @@
         tooltip(r.x - 20, r.y - 78, `${d.name} (${ITEM_KEYS[i]})`, d.desc, g.items[id] ? '' : 'Hết rồi');
       });
     }
+  }
+
+  function wrapLines(c, s, maxW, size) {
+    c.font = `bold ${size}px "Trebuchet MS", Arial, sans-serif`;
+    const out = [];
+    let line = '';
+    for (const w of s.split(' ')) {
+      const test = line ? line + ' ' + w : w;
+      if (c.measureText(test).width > maxW && line) { out.push(line); line = w; } else line = test;
+    }
+    if (line) out.push(line);
+    return out;
+  }
+
+  function drawCheerBubble(ch) {
+    const pp = PHUONG_PANEL;
+    const a = ch.t < 0.25 ? ch.t / 0.25 : ch.t > ch.dur - 0.5 ? (ch.dur - ch.t) / 0.5 : 1;
+    const lines = wrapLines(ctx, ch.text, pp.w - 24, 13);
+    const bh = 14 + lines.length * 17;
+    const x = pp.x, y = pp.y + pp.h + 12 + (1 - Math.min(1, ch.t * 4)) * -8;
+    ctx.save(); ctx.globalAlpha = clamp(a, 0, 1);
+    ctx.fillStyle = '#fffde7';
+    ctx.beginPath(); ctx.moveTo(x + 34, y); ctx.lineTo(x + 44, y - 10); ctx.lineTo(x + 54, y); ctx.fill();
+    rrect(ctx, x, y, pp.w, bh, 10, '#fffde7', '#ff6f00', 2);
+    lines.forEach((ln, i) => text(ctx, ln, x + pp.w / 2, y + 15 + i * 17, 13, '#4e1c00'));
+    ctx.restore();
   }
 
   function tooltip(x, y, title, desc, note) {
@@ -2893,6 +2934,7 @@
   });
 
   window.addEventListener('keydown', (e) => {
+    if (gift && $('screen-gift').classList.contains('show') && (e.key === 'Enter' || e.key === ' ') && $('btn-gift-done').hidden) { e.preventDefault(); tapGift(); return; }
     if (e.key === 'Escape') {
       if (game && (game.selected || game.shovel || game.itemSel)) { clearSelection(); return; }
       if (game && isPlaying()) togglePause();
@@ -2907,7 +2949,7 @@
   });
 
   // ============================================================== MÀN HÌNH
-  const overlays = ['screen-title', 'screen-story', 'screen-select', 'screen-pause', 'screen-lose', 'screen-win'];
+  const overlays = ['screen-title', 'screen-story', 'screen-select', 'screen-pause', 'screen-lose', 'screen-win', 'screen-gift'];
   function showOverlay(id) {
     overlays.forEach((o) => $(o).classList.toggle('show', o === id));
   }
@@ -2930,7 +2972,7 @@
       b.className = 'lvl-card' + (locked ? ' locked' : '');
       const won = progress.won.includes(L.id);
       b.innerHTML = `<span class="num">${locked ? '🔒' : L.id}</span>${L.name.replace(/^Màn \d+: /, '')}` +
-        `<span class="stars">${won ? '🏮 Đã thắng' : locked ? 'Chưa mở' : 'Sẵn sàng'}</span>`;
+        `<span class="stars">${won ? '🏮 Đã thắng' : locked ? 'Chưa mở' : i === DATA.levels.length - 1 ? '🎁 Hộp quà bí mật' : 'Sẵn sàng'}</span>`;
       b.disabled = locked;
       b.addEventListener('click', () => startStory(i));
       box.appendChild(b);
@@ -3057,12 +3099,177 @@
       $('win-text').textContent = last
         ? 'Phần thưởng: chiếc Quần Túi Hộp Rằn Ri ống rộng, quà của ông chủ Phương dành riêng cho người bảo vệ được nhà ông!'
         : `Ông chủ Phương an toàn! Bạn nhận được đồng minh mới: ${plantDef(L.reward).name}.`;
+      const left = DATA.levels.length - 1 - g.idx;
+      $('win-cheer').textContent = last
+        ? 'Bạn đã chinh phục trọn 3 màn! Mặc chiếc quần rằn ri đi rước đèn thôi! 🏮'
+        : pick(DATA.cheers.win_level).replace('{left}', left);
       $('btn-next').style.display = last ? 'none' : '';
       showOverlay('screen-win');
       rewardAnim = L.reward;
     };
-    if (last && L.ending) runStory(L.ending, show); else show();
+    if (last) {
+      const afterGift = () => (L.ending_after ? runStory(L.ending_after, show) : show());
+      const gift = () => openGift(L.reward, afterGift);
+      if (L.ending) runStory(L.ending, gift); else gift();
+    } else show();
   }
+
+  function showLose() {
+    $('lose-cheer').textContent = pick(DATA.cheers.lose);
+    $('lose-tip').textContent = pick(DATA.tips);
+    showOverlay('screen-lose');
+  }
+
+  // ------------------------------------------------------ mở hộp quà bí mật
+  const GIFT_HINTS = [
+    'Bấm vào hộp quà để mở!',
+    'Ơ... hộp quà rung rinh kìa! Bấm tiếp đi!',
+    'Có ánh sáng lọt ra kìa! Bấm thêm lần nữa!',
+    'Tùng... tùng... tùng... tùng...',
+  ];
+  let gift = null;
+  function openGift(prize, done) {
+    gift = { prize, done, taps: 0, shake: 0, rollT: -1, openT: -1, t: 0, confetti: [], revealed: false };
+    $('gift-title').textContent = 'Hộp Quà Bí Mật của ông chủ Phương';
+    $('gift-hint').textContent = GIFT_HINTS[0];
+    $('btn-gift-done').hidden = true;
+    showOverlay('screen-gift');
+  }
+  function tapGift() {
+    if (!gift || gift.rollT >= 0 || gift.openT >= 0) return;
+    audio();
+    gift.taps++;
+    gift.shake = 1;
+    sfx.tick(gift.taps);
+    $('gift-hint').textContent = GIFT_HINTS[Math.min(gift.taps, 3)];
+    if (gift.taps >= 3) { gift.rollT = 0; sfx.drumroll(); }
+  }
+  function startReveal() {
+    gift.openT = 0;
+    sfx.fanfare();
+    const cols = ['#ff5252', '#ffd54f', '#69f0ae', '#40c4ff', '#e040fb', '#ffffff'];
+    for (let i = 0; i < 120; i++) {
+      const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.2;
+      const v = 160 + Math.random() * 260;
+      gift.confetti.push({ x: 180, y: 128, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 14, col: cols[i % cols.length], w: 4 + Math.random() * 4, h: 6 + Math.random() * 6 });
+    }
+  }
+
+  function drawGiftBox(c, t, lidOff) {
+    const body = c.createLinearGradient(-65, 0, 65, 0);
+    body.addColorStop(0, '#b71c1c'); body.addColorStop(0.45, '#ef5350'); body.addColorStop(1, '#8e0000');
+    rrect(c, -62, 0, 124, 96, 6, body, '#4a0000', 2.5);
+    c.fillStyle = 'rgba(255,213,79,.55)';
+    for (let i = 0; i < 6; i++) { starPath(c, -44 + (i % 3) * 44 + (i > 2 ? 22 : 0), 22 + (i > 2 ? 44 : 0), 6, 2.6); c.fill(); }
+    rrect(c, -10, 0, 20, 96, 2, '#ffca28', '#8a6000', 1.5);
+    if (lidOff) return;
+    // nắp + nơ
+    const lid = c.createLinearGradient(-72, -24, 72, 0);
+    lid.addColorStop(0, '#c62828'); lid.addColorStop(0.5, '#ff6f60'); lid.addColorStop(1, '#8e0000');
+    rrect(c, -72, -24, 144, 26, 6, lid, '#4a0000', 2.5);
+    rrect(c, -10, -24, 20, 26, 2, '#ffca28', '#8a6000', 1.5);
+    drawBow(c, t);
+  }
+  function drawBow(c, t) {
+    c.save(); c.translate(0, -26);
+    [-1, 1].forEach((sd) => {
+      c.save(); c.scale(sd, 1); c.rotate(-0.35 + Math.sin(t * 3) * 0.04);
+      ell(c, 20, -8, 22, 12, '#ffca28', '#8a6000', 2);
+      ell(c, 18, -8, 10, 5, '#e0a800');
+      c.restore();
+    });
+    ell(c, 0, -6, 9, 8, '#ffd54f', '#8a6000', 2);
+    c.restore();
+  }
+
+  function renderGift(t, dt) {
+    if (!gift || !$('screen-gift').classList.contains('show')) return;
+    const g2 = gift;
+    g2.t += dt;
+    g2.shake = Math.max(g2.rollT >= 0 && g2.openT < 0 ? 0.9 : 0, g2.shake - dt * 2.2);
+    if (g2.rollT >= 0 && g2.openT < 0) { g2.rollT += dt; if (g2.rollT > 1.15) startReveal(); }
+    const c = $('gift-canvas').getContext('2d');
+    c.save();
+    c.clearRect(0, 0, 720, 560);
+    c.scale(2, 2);
+    const bg = c.createRadialGradient(180, 140, 10, 180, 140, 200);
+    bg.addColorStop(0, 'rgba(255,241,160,.35)'); bg.addColorStop(1, 'rgba(255,241,160,0)');
+    c.fillStyle = bg; c.fillRect(0, 0, 360, 280);
+    const bx = 180, by = 150;
+    const glowRays = (n, alpha, len) => {
+      c.save(); c.translate(bx, by - 22); c.rotate(g2.t * 0.4);
+      for (let i = 0; i < n; i++) {
+        c.rotate((Math.PI * 2) / n);
+        c.fillStyle = `rgba(255,245,170,${alpha})`;
+        c.beginPath(); c.moveTo(-7, 0); c.lineTo(0, -len); c.lineTo(7, 0); c.fill();
+      }
+      c.restore();
+    };
+    if (g2.openT < 0) {
+      if (g2.taps > 0) glowRays(g2.taps * 5, 0.12 * g2.taps, 120 + g2.taps * 20);
+      const sh = g2.shake;
+      c.save();
+      c.translate(bx + Math.sin(g2.t * 55) * 6 * sh, by + Math.sin(g2.t * 2) * 3);
+      c.rotate(Math.sin(g2.t * 42) * 0.07 * sh);
+      ell(c, 0, 100, 70, 10, 'rgba(0,0,0,.35)');
+      drawGiftBox(c, g2.t, false);
+      if (g2.taps > 0) {
+        c.fillStyle = `rgba(255,250,200,${0.3 * g2.taps})`;
+        c.fillRect(-60, -2, 120, 4);
+      }
+      c.restore();
+      text(c, '?', bx + 88, by - 70 + Math.sin(g2.t * 3) * 6, 38, '#fff59d', 'center', '#7a3b00');
+      text(c, '?', bx - 92, by - 50 + Math.cos(g2.t * 3) * 6, 26, '#ffcc80', 'center', '#7a3b00');
+    } else {
+      g2.openT += dt;
+      const o = g2.openT;
+      glowRays(18, Math.min(0.45, o * 0.6), 220);
+      // quà bay lên từ trong hộp
+      const k = clamp((o - 0.2) / 1.1, 0, 1);
+      const e = 1 - Math.pow(1 - k, 3);
+      c.save(); c.translate(bx, by + 30 - 120 * e); c.scale(0.25 + 0.75 * e, 0.25 + 0.75 * e);
+      drawRewardIcon(c, g2.prize, g2.t);
+      c.restore();
+      c.save(); c.translate(bx, by);
+      ell(c, 0, 100, 70, 10, 'rgba(0,0,0,.35)');
+      drawGiftBox(c, g2.t, true);
+      c.restore();
+      // nắp bật tung
+      if (o < 1.5) {
+        c.save();
+        c.translate(bx + 140 * o, by - 12 - 420 * o + 380 * o * o);
+        c.rotate(o * 5);
+        const lid = c.createLinearGradient(-72, -24, 72, 0);
+        lid.addColorStop(0, '#c62828'); lid.addColorStop(1, '#8e0000');
+        rrect(c, -72, -12, 144, 26, 6, lid, '#4a0000', 2.5);
+        rrect(c, -10, -12, 20, 26, 2, '#ffca28', '#8a6000', 1.5);
+        c.translate(0, 12); drawBow(c, g2.t);
+        c.restore();
+      }
+      for (const p of g2.confetti) {
+        p.vy += 380 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt; p.vx *= 0.995;
+        if (p.y > 300) continue;
+        c.save(); c.translate(p.x, p.y); c.rotate(p.rot);
+        c.fillStyle = p.col; c.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        c.restore();
+      }
+      if (o > 1.6 && !g2.revealed) {
+        g2.revealed = true;
+        $('gift-title').textContent = 'QUẦN TÚI HỘP RẰN RI ỐNG RỘNG!';
+        $('gift-hint').textContent = 'Bảo vật quý nhất của ông chủ Phương giờ là của bạn!';
+        $('btn-gift-done').hidden = false;
+        $('btn-gift-done').focus();
+      }
+    }
+    c.restore();
+  }
+  $('gift-canvas').addEventListener('click', tapGift);
+  $('btn-gift-done').addEventListener('click', () => {
+    if (!gift) return;
+    const d = gift.done;
+    gift = null;
+    d();
+  });
 
   let rewardAnim = null;
   function renderRewardCanvas(t) {
@@ -3124,7 +3331,7 @@
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     const t = now / 1000;
-    if (game && !paused && game.state !== 'story' && !$('screen-win').classList.contains('show') && !$('screen-select').classList.contains('show')) {
+    if (game && !paused && game.state !== 'story' && !$('screen-win').classList.contains('show') && !$('screen-select').classList.contains('show') && !$('screen-gift').classList.contains('show')) {
       for (let i = 0; i < speed; i++) update(dt);
     }
     render();
@@ -3136,6 +3343,7 @@
       } else drawPortrait(pc, story.who, t);
     }
     renderRewardCanvas(t);
+    renderGift(t, dt);
     requestAnimationFrame(loop);
   }
 

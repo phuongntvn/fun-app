@@ -27,6 +27,7 @@
           <div class="moon-deco"></div>
           <h1>Thỏ Ngọc <span>&amp;</span> Kỳ Lân<br><small>vs</small> ZOMBIE</h1>
           <p class="subtitle">~ Bảo vệ Ông chủ Phương trong Đêm Trung Thu ~</p>
+          <p class="gift-teaser">🎁 Vượt qua cả 3 màn để mở <b>Hộp Quà Bí Mật</b> của ông chủ Phương!</p>
           <button class="big-btn" id="btn-start">Bắt đầu phiêu lưu</button>
           <div id="level-select"></div>
           <button class="small-btn" id="btn-reset">Chơi lại từ đầu</button>
@@ -76,8 +77,20 @@
         <div class="panel lose">
           <h2>LŨ ZOMBIE ĐÃ XÔNG VÀO NHÀ<br>ÔNG CHỦ PHƯƠNG!</h2>
           <p>...ăn sạch mâm cỗ Trung Thu, và cả NÃO của ông chủ nữa!</p>
+          <p class="cheer" id="lose-cheer"></p>
+          <p class="tip" id="lose-tip"></p>
           <button class="big-btn" id="btn-retry">Thử lại</button>
           <button class="small-btn" id="btn-lose-menu">Về menu</button>
+        </div>
+      </div>
+
+      <!-- Mở hộp quà bí mật -->
+      <div id="screen-gift" class="overlay">
+        <div class="panel gift">
+          <h2 id="gift-title">Hộp Quà Bí Mật của ông chủ Phương</h2>
+          <canvas id="gift-canvas" width="720" height="560"></canvas>
+          <p id="gift-hint">Bấm vào hộp quà để mở!</p>
+          <button class="big-btn" id="btn-gift-done" hidden>Nhận quà!</button>
         </div>
       </div>
 
@@ -87,6 +100,7 @@
           <h2 id="win-title">Chiến thắng!</h2>
           <canvas id="reward-canvas" width="180" height="180"></canvas>
           <p id="win-text"></p>
+          <p class="cheer" id="win-cheer"></p>
           <button class="big-btn" id="btn-next">Màn tiếp theo</button>
           <button class="small-btn" id="btn-win-menu">Về menu</button>
         </div>
