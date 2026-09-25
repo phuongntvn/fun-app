@@ -2637,7 +2637,111 @@
     if (line) text(c, line, x, y, size, color, 'left', null, 'normal');
   }
 
+  // Quần túi hộp rằn ri ống rộng: phần thưởng của ông chủ Phương
+  let camoBlobs = null;
+  function camoPattern() {
+    if (camoBlobs) return camoBlobs;
+    let seed = 7;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const cols = ['#2b2c1f', '#6f6c47', '#3d4029', '#8a855d', '#252619'];
+    camoBlobs = [];
+    for (let i = 0; i < 70; i++) {
+      const pts = [];
+      const n = 7 + Math.floor(rnd() * 4);
+      const r = 5 + rnd() * 9;
+      for (let k = 0; k < n; k++) {
+        const a = (k / n) * Math.PI * 2;
+        const rr = r * (0.55 + rnd() * 0.7);
+        pts.push([Math.cos(a) * rr * 1.5, Math.sin(a) * rr * 0.8]);
+      }
+      camoBlobs.push({ x: -56 + rnd() * 112, y: -66 + rnd() * 132, rot: (rnd() - 0.5) * 0.8, pts, col: cols[i % cols.length] });
+    }
+    return camoBlobs;
+  }
+
+  function pantsPath(c) {
+    c.beginPath();
+    c.moveTo(-34, -60); c.lineTo(34, -60);
+    c.quadraticCurveTo(42, -20, 44, 10);
+    c.lineTo(54, 64);
+    c.quadraticCurveTo(30, 70, 7, 64);
+    c.lineTo(3, -6);
+    c.lineTo(-3, -6);
+    c.lineTo(-7, 64);
+    c.quadraticCurveTo(-30, 70, -54, 64);
+    c.lineTo(-44, 10);
+    c.quadraticCurveTo(-42, -20, -34, -60);
+    c.closePath();
+  }
+
+  function drawCargoPocket(c, side) {
+    c.save(); c.scale(side, 1);
+    c.translate(40, 0);
+    // túi hộp phồng ra ngoài
+    c.beginPath();
+    c.moveTo(-8, -12); c.lineTo(12, -12); c.lineTo(14, 26); c.quadraticCurveTo(2, 30, -9, 26); c.closePath();
+    c.fillStyle = 'rgba(40,42,28,.55)'; c.fill();
+    c.strokeStyle = '#1c1d14'; c.lineWidth = 1.6; c.stroke();
+    c.setLineDash([2, 2]); c.strokeStyle = 'rgba(214,200,150,.7)'; c.lineWidth = 0.8;
+    c.beginPath(); c.moveTo(-6, -8); c.lineTo(10, -8); c.lineTo(12, 23); c.stroke();
+    c.setLineDash([]);
+    // nắp túi
+    c.beginPath(); c.moveTo(-10, -20); c.lineTo(14, -20); c.lineTo(15, -9); c.lineTo(-10, -9); c.closePath();
+    c.fillStyle = 'rgba(58,60,40,.85)'; c.fill(); c.strokeStyle = '#1c1d14'; c.lineWidth = 1.6; c.stroke();
+    c.restore();
+  }
+
+  function drawCamoPants(c, t) {
+    // ánh sáng phía sau
+    ell(c, 0, 0, 72, 76, 'rgba(255,241,160,.18)');
+    c.save();
+    c.rotate(Math.sin(t * 1.5) * 0.03);
+    pantsPath(c);
+    c.fillStyle = '#56593b'; c.fill();
+    c.save(); pantsPath(c); c.clip();
+    for (const b of camoPattern()) {
+      c.save(); c.translate(b.x, b.y); c.rotate(b.rot);
+      c.beginPath(); b.pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.closePath();
+      c.fillStyle = b.col; c.fill();
+      c.restore();
+    }
+    // bạc màu kiểu wash denim
+    const wash = c.createRadialGradient(-10, -20, 10, 0, 0, 90);
+    wash.addColorStop(0, 'rgba(255,255,230,.22)'); wash.addColorStop(0.6, 'rgba(255,255,230,0)'); wash.addColorStop(1, 'rgba(0,0,0,.35)');
+    c.fillStyle = wash; c.fillRect(-60, -70, 120, 140);
+    // ly quần + nếp gấp
+    c.strokeStyle = 'rgba(20,20,12,.55)'; c.lineWidth = 1.4;
+    c.beginPath();
+    c.moveTo(-18, -54); c.quadraticCurveTo(-22, 0, -28, 60);
+    c.moveTo(18, -54); c.quadraticCurveTo(22, 0, 28, 60);
+    c.moveTo(-40, 30); c.lineTo(-30, 36); c.moveTo(40, 30); c.lineTo(30, 36);
+    c.stroke();
+    // gấu quần sáng màu
+    c.fillStyle = 'rgba(200,190,140,.25)';
+    c.fillRect(-60, 58, 120, 8);
+    c.restore();
+    pantsPath(c);
+    c.strokeStyle = '#17180f'; c.lineWidth = 2.2; c.stroke();
+    // cạp quần, đỉa, cúc, khoá
+    rrect(c, -35, -64, 70, 9, 2, '#4a4c33', '#17180f', 1.6);
+    [-26, -12, 12, 26].forEach((x) => rrect(c, x - 2, -66, 4, 12, 1, '#3d3f2a', '#17180f', 1));
+    ell(c, 0, -59.5, 3, 3, '#c9b37a', '#5a4a1e', 1);
+    c.strokeStyle = 'rgba(214,200,150,.8)'; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(0, -55); c.lineTo(0, -24); c.quadraticCurveTo(4, -20, 8, -24); c.lineTo(8, -54); c.stroke();
+    drawCargoPocket(c, 1);
+    drawCargoPocket(c, -1);
+    c.restore();
+    // lấp lánh
+    for (let i = 0; i < 3; i++) {
+      const k = (t * 0.7 + i / 3) % 1;
+      c.save(); c.globalAlpha = Math.sin(k * Math.PI);
+      starPath(c, -46 + i * 44, -60 + i * 30 - k * 10, 5, 2); c.fillStyle = '#fff59d'; c.fill();
+      c.restore();
+    }
+  }
+
   function drawRewardIcon(c, id, t) {
+    if (id === 'quan_ran_ri') { c.save(); c.scale(0.75, 0.75); drawCamoPants(c, t); c.restore(); return; }
     if (id === 'trophy') {
       ell(c, 0, 0, 60, 60, 'rgba(255,235,59,.25)');
       c.save(); c.scale(1.3, 1.3);
@@ -2846,6 +2950,7 @@
     $('story-name').textContent = NAMES[ln.who] || ln.who;
     $('story-line').textContent = ln.text;
     story.who = ln.who;
+    story.show = ln.show || null;
   }
   function advanceStory() {
     if (!story) return;
@@ -2950,7 +3055,7 @@
     const show = () => {
       $('win-title').textContent = last ? 'ÔNG CHỦ PHƯƠNG ĐÃ AN TOÀN!' : 'Chiến thắng!';
       $('win-text').textContent = last
-        ? 'Bạn đã phá đảo! Lũ zombie bỏ chạy, ông chủ Phương mời cả xóm rước đèn phá cỗ.'
+        ? 'Phần thưởng: chiếc Quần Túi Hộp Rằn Ri ống rộng, quà của ông chủ Phương dành riêng cho người bảo vệ được nhà ông!'
         : `Ông chủ Phương an toàn! Bạn nhận được đồng minh mới: ${plantDef(L.reward).name}.`;
       $('btn-next').style.display = last ? 'none' : '';
       showOverlay('screen-win');
@@ -3023,7 +3128,13 @@
       for (let i = 0; i < speed; i++) update(dt);
     }
     render();
-    if (story) drawPortrait($('portrait').getContext('2d'), story.who, t);
+    if (story) {
+      const pc = $('portrait').getContext('2d');
+      if (story.show) {
+        pc.clearRect(0, 0, 160, 160);
+        pc.save(); pc.translate(80, 84); pc.scale(1.05, 1.05); drawRewardIcon(pc, story.show, t); pc.restore();
+      } else drawPortrait(pc, story.who, t);
+    }
     renderRewardCanvas(t);
     requestAnimationFrame(loop);
   }

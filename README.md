@@ -105,6 +105,7 @@ Lệnh sẽ in ra một link `https://...` cho người khác vào chơi. Tắt 
 1. **Chiều Rằm Tháng Tám** – ban ngày, làm quen; thắng nhận Thỏ Tuyết.
 2. **Hoàng Hôn Rước Đèn** – xuất hiện Nồi Đồng, Múa Lân và Quái Vật Thiên Cẩu; thắng nhận Kỳ Lân Cầu Vồng.
 3. **Đêm Trăng Tròn Quyết Chiến** – ban đêm, ít Ánh Trăng, Ông Địa Khổng Lồ ném Zombie Nhóc; chọn 9 trong 12 đồng minh.
+   Thắng màn cuối, ông chủ Phương trao tặng **chiếc Quần Túi Hộp Rằn Ri ống rộng**, bảo vật quý nhất của ông, cho người đã bảo vệ nhà mình.
 
 Tiến độ mở khoá màn được lưu trong trình duyệt (localStorage).
 
