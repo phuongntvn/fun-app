@@ -1,0 +1,14 @@
+{
+  "name": "ninja-village",
+  "version": "1.0.0",
+  "description": "Làng Ninja Hoa Hồng - game web nhiều người chơi lấy cảm hứng từ Ninja School",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
