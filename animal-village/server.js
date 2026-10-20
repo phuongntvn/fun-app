@@ -598,6 +598,8 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
   });
 
   const wss = new WebSocketServer({ server, path: '/ws' });
+  // lỗi mở cổng được báo qua server http (xem phần chạy chính); WebSocketServer chỉ phát lại lỗi đó
+  wss.on('error', () => {});
   wss.on('connection', (ws) => {
     const s = { id: nextId++, ws, joined: false, cd: {}, fishing: null, duel: null, invite: null };
     sessions.set(s.id, s);
@@ -653,6 +655,16 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
 if (require.main === module) {
   const port = Number(process.env.PORT) || 3000;
   const game = createGame({ port });
+  game.server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`\n❌ Cổng ${port} đang bị chương trình khác dùng (thường là game đang chạy ở một cửa sổ khác).`);
+      console.error('   Cách sửa: tắt cửa sổ đó bằng Ctrl + C rồi chạy lại,');
+      console.error(`   hoặc chạy ở cổng khác:  PowerShell: $env:PORT=${port + 1}; npm start   |   macOS/Linux: PORT=${port + 1} npm start\n`);
+    } else if (err.code === 'EACCES') {
+      console.error(`\n❌ Không có quyền mở cổng ${port}. Thử cổng khác, ví dụ PORT=3001.\n`);
+    } else console.error('\n❌ Không mở được server:', err.message, '\n');
+    process.exit(1);
+  });
   game.listen((p) => {
     console.log(`🐹 Làng Thú Ngộ Nghĩnh đang chạy ở cổng ${p}`);
     console.log(`   Máy này:      http://localhost:${p}`);
