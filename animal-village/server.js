@@ -51,7 +51,7 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
   // ---------- Quái ----------
   const monsters = D.MONSTER_SPAWNS.map(([type, minX, maxX], i) => {
     const t = D.MONSTER_TYPES[type];
-    return { id: i + 1, type, minX, maxX, x: minX + (maxX - minX) * random(), dir: 1, hp: t.hp, maxHp: t.hp, dead: false, respawnAt: 0, aggro: null, aggroUntil: 0, turnAt: 0 };
+    return { id: i + 1, type, minX, maxX, x: minX + (maxX - minX) * random(), dir: 1, hp: t.hp, maxHp: t.hp, dead: false, respawnAt: 0, aggro: null, aggroUntil: 0, turnAt: 0, talkAt: 0, calmUntil: 0, nextCharge: 0, chargeUntil: 0, charging: false };
   });
 
   function tickMonsters(now, dt) {
@@ -61,15 +61,28 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
         if (now >= m.respawnAt) { m.dead = false; m.hp = m.maxHp; m.x = m.minX + (m.maxX - m.minX) * random(); }
         continue;
       }
+      if (now < m.calmUntil) { m.charging = false; continue; } // đang đối thoại với người chơi
       let target = null;
       if (m.aggro && now < m.aggroUntil) target = sessions.get(m.aggro);
-      if (!target && t.boss) {
-        for (const s of sessions.values()) if (s.joined && Math.abs(s.x - m.x) < 320 && s.x > m.minX - 100) target = s;
+      if (!target && (t.boss || t.tough)) {
+        // quái trâu và boss tự phát hiện người chơi đến gần
+        const range = t.boss ? 320 : 220;
+        for (const s of sessions.values()) if (s.joined && Math.abs(s.x - m.x) < range && s.x > m.minX - 100 && s.x < m.maxX + 100) target = s;
+      }
+      if (target && t.lines && now >= m.talkAt) {
+        m.talkAt = now + 9000 + random() * 8000;
+        broadcast({ t: 'bubble', who: 'm' + m.id, text: pick(t.lines) });
       }
       let speed = t.speed;
+      m.charging = false;
       if (target) {
         m.dir = target.x > m.x ? 1 : -1;
-        speed *= 1.6;
+        if (t.charge) {
+          // Trâu Mộng: đứng cào đất lấy đà rồi lao thật nhanh
+          if (now >= m.nextCharge) { m.chargeUntil = now + 850; m.nextCharge = now + 2600 + random() * 800; }
+          m.charging = now < m.chargeUntil;
+          speed *= m.charging ? 5 : 0.3;
+        } else speed *= t.chase || 1.6;
         if (Math.abs(target.x - m.x) < 20) speed = 0;
       } else if (now >= m.turnAt) {
         m.dir = random() < 0.5 ? -1 : 1;
@@ -274,9 +287,17 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
     if (s.fishing) return;
     if (s.rec.stage !== 3) return send(s, { t: 'fish', state: 'cancel', text: s.rec.stage < 3 ? 'Chưa có nhiệm vụ câu cá! Gặp Thần Sông nhận nhiệm vụ trước đã nha.' : 'Thần Sông no rồi, không cần câu thêm đâu!' });
     if (!(s.x <= D.WORLD.dock.x2 + 20 && Math.abs(s.y - D.WORLD.groundY) < 5)) return send(s, { t: 'fish', state: 'cancel', text: 'Ra đứng trên bến gỗ ở bờ sông mới câu được nha!' });
-    const f = { state: 'wait', x: s.x };
+    // phao rơi ở chỗ ngẫu nhiên trên mặt sông: far = 0 (sát bờ) .. 1 (xa nhất)
+    const F = D.FISHING, far = random();
+    const bx = Math.round(D.WORLD.waterEnd - 25 - far * F.castRange);
+    const f = { state: 'wait', x: s.x, far, bx };
     s.fishing = f;
-    send(s, { t: 'fish', state: 'wait' });
+    send(s, { t: 'fish', state: 'wait', bx });
+    if (random() > 1 - F.noBite) {
+      // lần này chẳng có con cá nào ghé qua
+      f.timer = setTimeout(() => { stopFishing(s); send(s, { t: 'fish', state: 'nothing', text: 'Chờ mãi chẳng có con cá nào cắn câu... Quăng chỗ khác thử xem!' }); }, timing.noBiteMs ?? rnd(5000, 7000));
+      return;
+    }
     f.timer = setTimeout(() => {
       f.state = 'bite';
       send(s, { t: 'fish', state: 'bite' });
@@ -291,12 +312,23 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
     if (!f) return;
     stopFishing(s);
     if (f.state !== 'bite') return send(s, { t: 'fish', state: 'early', text: 'Giật sớm quá, cá sợ chạy mất rồi!' });
-    let roll = random() * D.FISH.reduce((a, b) => a + b.w, 0);
-    const fish = D.FISH.find((x) => (roll -= x.w) < 0) || D.FISH[0];
-    if (!fish.trash) s.rec.fish++;
-    send(s, { t: 'fish', state: 'caught', name: fish.name, trash: !!fish.trash });
-    broadcast({ t: 'bubble', who: s.id, text: fish.trash ? `Câu được ${fish.name}... ai xả rác vậy trời!` : `Câu được ${fish.name}! Haha!` });
-    addExp(s, 3);
+    const F = D.FISHING, r = random();
+    const fishP = F.fish + F.farBonus * f.far, trashP = F.trash - F.farBonus * f.far * 0.7;
+    if (r < fishP) {
+      let roll = random() * D.FISH.reduce((a, b) => a + b.w, 0);
+      const fish = D.FISH.find((x) => (roll -= x.w) < 0) || D.FISH[0];
+      s.rec.fish++;
+      send(s, { t: 'fish', state: 'caught', name: fish.name, rare: !!fish.rare });
+      broadcast({ t: 'bubble', who: s.id, text: fish.rare ? `WOW! Câu được ${fish.name}, hiếm lắm luôn!!` : `Câu được ${fish.name}! Haha!` });
+      addExp(s, fish.rare ? 15 : 3);
+    } else if (r < fishP + trashP) {
+      const name = pick(D.TRASH);
+      send(s, { t: 'fish', state: 'trash', name });
+      broadcast({ t: 'bubble', who: s.id, text: `Câu được ${name}... ai xả rác vậy trời!` });
+    } else {
+      send(s, { t: 'fish', state: 'miss', text: pick(D.FISH_MISS) });
+      broadcast({ t: 'bubble', who: s.id, text: 'Á á, tuột mất rồi!' });
+    }
     sendProgress(s);
   }
 
@@ -347,9 +379,31 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
         broadcast({ t: 'drop', d });
       }
     }
-    if (t.boss) system(`👑 ${r.name} đã hạ gục ${t.name}! Thiệt là bá khí!`);
+    if (t.boss) {
+      system(`👑 ${r.name} đã hạ gục ${t.name}! Thiệt là bá khí!`);
+      r.boarDefeats = (r.boarDefeats || 0) + 1;
+      // lời trăng trối hé lộ Vua Mèo Mun: người hạ gục xem cả đoạn, người khác nghe câu của heo
+      const lines = sceneLines(D.BOAR_SCENE.defeat, m, s);
+      send(s, { t: 'scene', lines });
+      broadcast({ t: 'bubble', who: lines[0].who, text: lines[0].text }, s);
+    }
     addExp(s, t.exp);
     sendProgress(s);
+  }
+
+  // Lời thoại kịch bản: 'boar' là heo rừng, 'me' là người chơi
+  function sceneLines(lines, boar, s) {
+    return lines.map(([who, text]) => ({ who: who === 'boar' ? 'm' + boar.id : s.id, text: D.fill(text, { name: s.rec.name }) }));
+  }
+  // lần đầu đi vào hang: heo đứng lại nói chuyện với người chơi
+  function checkBoarIntro(s, now) {
+    if (s.rec.boarMet || s.x < 3440) return;
+    const boar = monsters.find((m) => m.type === 'boar' && !m.dead);
+    if (!boar) return;
+    s.rec.boarMet = true;
+    boar.calmUntil = now + 15000;
+    send(s, { t: 'scene', lines: sceneLines(D.BOAR_SCENE.intro, boar, s) });
+    save();
   }
 
   function pickup(s, id, now) {
@@ -558,6 +612,7 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
         s.anim = ['idle', 'run', 'jump', 'atk0', 'atk1', 'hurt', 'dead', 'fish'].includes(msg.anim) ? msg.anim : 'idle';
         if (typeof msg.hp === 'number') s.hp = Math.max(0, Math.min(MAX_HP, msg.hp));
         if (s.fishing && Math.abs(s.x - s.fishing.x) > 30) { stopFishing(s); send(s, { t: 'fish', state: 'cancel' }); }
+        checkBoarIntro(s, now);
         break;
       case 'chat': {
         const text = String(msg.text || '').trim().slice(0, 120);
@@ -634,7 +689,7 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
     broadcast({
       t: 'snap',
       p: [...sessions.values()].filter((s) => s.joined).map((s) => [s.id, Math.round(s.x), Math.round(s.y), s.dir, s.anim, s.hp]),
-      m: monsters.map((m) => [m.id, Math.round(m.x), m.dir, m.hp, m.dead ? 1 : 0]),
+      m: monsters.map((m) => [m.id, Math.round(m.x), m.dir, m.hp, m.dead ? 1 : 0, m.charging ? 1 : 0]),
       k: [...senseis.values()].map((n) => [n.key, Math.round(n.x), n.dir, n.anim]),
     });
   }, TICK_MS);

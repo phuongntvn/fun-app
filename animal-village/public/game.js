@@ -477,33 +477,105 @@
       ctx.fillStyle = '#e63946';
       ctx.beginPath(); ctx.ellipse(0, -24, 22, 18, 0, Math.PI, 0); ctx.fill();
       ell(ctx, -9, -32, 4, 3, '#fff'); ell(ctx, 6, -36, 5, 3.5, '#fff'); ell(ctx, 14, -27, 3, 2.5, '#fff');
+    } else if (type === 'wolf') {
+      // Sói Xám Hầm Hố: chạy nhanh thì chân guồng nhanh, người chồm về trước
+      const fast = Math.min(1, Math.abs(m.tx - m.rx) / 25);
+      const cyc = t * (8 + fast * 10) + m.id;
+      ell(ctx, 0, 0, 30, 6, 'rgba(0,0,0,.2)');
+      ctx.scale(d, 1);
+      ctx.rotate(fast * 0.08);
+      const G1 = '#8a8fa0', G2 = '#d7dae3', G3 = '#5d6273';
+      ctx.save(); ctx.translate(-24, -28); ctx.rotate(-0.5 + Math.sin(cyc) * 0.2);
+      ell(ctx, -8, 0, 15, 7, G1, INK, 0.2); ell(ctx, -19, -2, 5, 4, G2);
+      ctx.restore();
+      for (const [lx, ph] of [[-16, 0], [-6, Math.PI], [12, Math.PI], [22, 0]]) {
+        const sw = Math.sin(cyc + ph) * 5;
+        ctx.fillStyle = G3; rr(ctx, lx - 4 + sw * 0.5, -16, 8, 16, 3); ctx.fill();
+        ell(ctx, lx + sw * 0.5, -1, 5, 2.5, '#3b3f4d');
+      }
+      ell(ctx, 0, -26, 25, 15, G1, INK);
+      ell(ctx, 4, -20, 15, 8, G2);
+      for (let i = 0; i < 4; i++) ell(ctx, 14 + i * 3, -40 + i * 4, 6, 5, G1);
+      ctx.fillStyle = G1;
+      ctx.beginPath(); ctx.moveTo(18, -46); ctx.lineTo(20, -62); ctx.lineTo(27, -48); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(26, -48); ctx.lineTo(32, -62); ctx.lineTo(34, -46); ctx.fill();
+      ctx.fillStyle = '#f2a7b5'; ctx.beginPath(); ctx.moveTo(21, -48); ctx.lineTo(21.5, -57); ctx.lineTo(25, -49); ctx.fill();
+      ell(ctx, 27, -38, 14, 12, G1, INK);
+      ell(ctx, 39, -33, 11, 6.5, G2, INK);
+      ell(ctx, 49, -35, 3.2, 2.6, '#2b2b3a');
+      ctx.fillStyle = '#fff';
+      for (const tx of [38, 43]) { ctx.beginPath(); ctx.moveTo(tx, -28); ctx.lineTo(tx + 1.5, -24); ctx.lineTo(tx + 3, -28); ctx.fill(); }
+      ell(ctx, 30, -41, 4, 3.2, '#ffd23f'); ell(ctx, 31, -41, 1.6, 2.6, '#2b2b3a');
+      ctx.strokeStyle = '#3b3f4d'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(24, -47); ctx.lineTo(35, -43); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(20, -36); ctx.lineTo(24, -31); ctx.stroke();
+    } else if (type === 'bull') {
+      // Trâu Mộng Cơ Bắp: lúc lấy đà húc thì cúi đầu, mắt đỏ, mũi phì hơi, bụi tung sau chân
+      const ch = m.charging;
+      const cyc = t * (ch ? 22 : 7) + m.id;
+      ell(ctx, 0, 0, 44, 7, 'rgba(0,0,0,.22)');
+      ctx.scale(d, 1);
+      const B1 = '#6b4a3a', B2 = '#9b6e55', B3 = '#3e2a20';
+      ctx.strokeStyle = B3; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-36, -40); ctx.quadraticCurveTo(-48, -30 + Math.sin(cyc) * 4, -46, -16); ctx.stroke();
+      ell(ctx, -46, -14, 4, 6, B3);
+      for (const [lx, ph] of [[-26, 0], [-12, Math.PI], [14, Math.PI], [28, 0]]) {
+        const sw = Math.sin(cyc + ph) * (ch ? 7 : 3);
+        ctx.fillStyle = B3; rr(ctx, lx - 6 + sw * 0.4, -22, 12, 22, 4); ctx.fill();
+        ctx.fillStyle = '#222'; rr(ctx, lx - 7 + sw * 0.4, -5, 14, 5, 2); ctx.fill();
+      }
+      ell(ctx, 0, -36, 40, 25, B1, INK);
+      ell(ctx, 14, -30, 20, 16, B2);
+      ctx.strokeStyle = 'rgba(255,220,190,.35)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(-14, -40, 12, 3.6, 5.2); ctx.stroke(); ctx.beginPath(); ctx.arc(4, -42, 10, 3.8, 5.4); ctx.stroke();
+      ctx.save(); ctx.translate(34, -44); ctx.rotate(ch ? 0.45 : Math.sin(t * 2) * 0.04); ctx.translate(0, ch ? 6 : 0);
+      ctx.fillStyle = '#fff4dc'; ctx.strokeStyle = '#b89c70'; ctx.lineWidth = 1.5;
+      for (const s2 of [-1, 1]) {
+        ctx.beginPath(); ctx.moveTo(-4, -12); ctx.quadraticCurveTo(-4 + s2 * 2, -32, s2 > 0 ? 18 : -20, -30); ctx.quadraticCurveTo(s2 > 0 ? 6 : -8, -22, 6, -10); ctx.closePath(); ctx.fill(); ctx.stroke();
+      }
+      ell(ctx, 4, 0, 19, 17, B1, INK);
+      ctx.fillStyle = '#e63946'; rr(ctx, -14, -12, 36, 6, 3); ctx.fill();
+      ell(ctx, 15, 8, 12, 9, '#e8b4a0', INK);
+      ell(ctx, 11, 8, 2, 2.5, '#5c3b28'); ell(ctx, 19, 8, 2, 2.5, '#5c3b28');
+      ctx.strokeStyle = '#ffc93c'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(15, 14, 4, 0, Math.PI); ctx.stroke();
+      ell(ctx, 8, -4, 4, 3.5, ch ? '#ff3b3b' : '#fff'); ell(ctx, 9, -4, 1.8, 2.4, '#2b2b3a');
+      ctx.strokeStyle = B3; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(2, -10); ctx.lineTo(14, -6); ctx.stroke();
+      ctx.restore();
+      if (ch && Math.random() < 0.5) {
+        burst(x - d * 30, y - 4, 1, { kind: 'puff', color: '#d9b38c', speed: 60, angle: -Math.PI / 2 - d * 0.6, spread: 0.8, life: 0.5, size: 7, grow: 10, g: -20 });
+        if (Math.random() < 0.3) burst(x + d * 52, y - 34, 1, { kind: 'puff', color: '#ffffff', speed: 50, angle: d > 0 ? 0 : Math.PI, spread: 0.6, life: 0.4, size: 4, grow: 6 });
+      }
     } else {
+      // Heo Rừng Đại Ca
       ell(ctx, 0, 0, 46, 8, 'rgba(0,0,0,.2)');
       ctx.scale(d, 1);
       const step = Math.sin(t * 10) * 3;
-      ctx.fillStyle = '#5c3b28';
+      ctx.fillStyle = '#4a2f20';
       for (const lx of [-28, -12, 12, 26]) { rr(ctx, lx - 5, -18 + (lx % 2 ? step : -step) * 0.3, 10, 18, 3); ctx.fill(); }
-      ell(ctx, 0, -38, 44, 28, '#7b4b33');
-      ctx.fillStyle = '#5c3b28';
-      for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(-30 + i * 10, -62); ctx.lineTo(-25 + i * 10, -74); ctx.lineTo(-20 + i * 10, -62); ctx.fill(); }
-      ell(ctx, 36, -36, 22, 20, '#8a5639');
-      ell(ctx, 52, -30, 10, 8, '#f7a1b5');
+      ell(ctx, 0, -38, 44, 28, '#7b4b33', INK);
+      ctx.fillStyle = '#4a2f20';
+      for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(-30 + i * 10, -62); ctx.lineTo(-25 + i * 10, -76); ctx.lineTo(-20 + i * 10, -62); ctx.fill(); }
+      ell(ctx, 6, -30, 24, 14, '#a8744f');
+      ell(ctx, 36, -36, 22, 20, '#8a5639', INK);
+      ell(ctx, 52, -30, 10, 8, '#f7a1b5', INK);
       ell(ctx, 50, -30, 2, 3, '#7a3b3b'); ell(ctx, 55, -30, 2, 3, '#7a3b3b');
-      ctx.fillStyle = '#fff';
-      ctx.beginPath(); ctx.moveTo(44, -24); ctx.lineTo(48, -42); ctx.lineTo(50, -24); ctx.fill();
-      ell(ctx, 40, -44, 4, 4, '#fff'); ell(ctx, 41, -44, 2, 2.5, '#2b2b3a');
-      ctx.strokeStyle = '#2b2b3a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(33, -52); ctx.lineTo(45, -48); ctx.stroke();
-      ctx.fillStyle = '#ffc93c';
+      ctx.fillStyle = '#fffaf0'; ctx.strokeStyle = '#c9b48f'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(43, -24); ctx.quadraticCurveTo(44, -40, 50, -46); ctx.quadraticCurveTo(48, -34, 50, -24); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ell(ctx, 40, -44, 4.5, 4.5, '#fff'); ell(ctx, 41, -44, 2, 2.6, '#2b2b3a');
+      ctx.strokeStyle = '#2b2b3a'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(33, -53); ctx.lineTo(46, -48); ctx.stroke();
+      const cg = ctx.createLinearGradient(0, -78, 0, -56); cg.addColorStop(0, '#fff1a8'); cg.addColorStop(1, '#f2b705');
+      ctx.fillStyle = cg;
       ctx.beginPath(); ctx.moveTo(22, -56); ctx.lineTo(24, -72); ctx.lineTo(30, -63); ctx.lineTo(36, -76); ctx.lineTo(42, -63); ctx.lineTo(48, -72); ctx.lineTo(48, -56); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#c48f00'; ctx.lineWidth = 1.5; ctx.stroke();
+      ell(ctx, 35, -62, 2.5, 2.5, '#e63946');
     }
     ctx.restore();
     const ti = MTYPES[type];
-    const top = y - ti.h - (type === 'boar' ? 22 : 14);
+    const top = y - ti.h - (type === 'boar' ? 22 : type === 'bull' ? 20 : 14);
     if (m.hp < m.maxHp) {
       ctx.fillStyle = 'rgba(0,0,0,.35)'; rr(ctx, x - 22, top - 6, 44, 6, 3); ctx.fill();
       ctx.fillStyle = '#ff4d6d'; rr(ctx, x - 22, top - 6, 44 * Math.max(0, m.hp / m.maxHp), 6, 3); ctx.fill();
     }
-    queueLabel(ti.name, x, top - 10, ti.boss ? '#ffb703' : '#fff', 11);
+    queueLabel(ti.name, x, top - 10, ti.boss ? '#ffb703' : ti.tough ? '#ff9a9a' : '#fff', 11);
   }
 
   function drawRose(ctx, x, y, t, seed) {
@@ -653,7 +725,7 @@
   const floaters = [], particles = [], fx = [];
   let progress = null;
   const me = { x: 1060, y: 470, vx: 0, vy: 0, face: 1, landAt: 0, landPow: 0, onGround: true, jumps: 0, dir: 1, hp: 100, invulnUntil: 0, atkK: -1, atkUntil: 0, cd: [0, 0], dead: false, deadUntil: 0, dropUntil: 0, lastHurt: 0 };
-  const fishing = { state: null, since: 0 };
+  const fishing = { state: null, since: 0, bx: 0, castAt: 0 }; // bx: chỗ phao rơi, castAt: lúc quăng cần
   const keys = {};
   let jumpQueued = false, talkQueued = false, fishQueued = false, pkQueued = false;
   const atkHeld = [false, false];
@@ -721,11 +793,11 @@
           const n = senseis.get(key);
           if (n) Object.assign(n, { tx: x, dir, anim }); else senseis.set(key, { rx: x, tx: x, dir, anim, face: dir });
         }
-        for (const [id, x, dir, hp, dead] of msg.m) {
+        for (const [id, x, dir, hp, dead, charging] of msg.m) {
           const m = monsters.get(id);
           if (!m) continue;
           if (m.dead && !dead) m.rx = x;
-          Object.assign(m, { tx: x, dir, hp, dead: !!dead });
+          Object.assign(m, { tx: x, dir, hp, dead: !!dead, charging: !!charging });
         }
         break;
       case 'atk': {
@@ -742,6 +814,7 @@
         if (msg.who === 'chief' || msg.who === 'river') sfx('npc', msg.who === 'chief' ? WORLD.chiefX : WORLD.riverGodX);
         if (msg.who === 'chief') addChat({ kind: 'npc', name: 'Trưởng làng', text: msg.text });
         if (msg.who === 'river') addChat({ kind: 'npc', name: 'Thần Sông', text: msg.text });
+        if (typeof msg.who === 'string' && msg.who[0] === 'm') { const mm = monsters.get(Number(msg.who.slice(1))); if (mm && Math.abs(mm.rx - me.x) < 900) addChat({ kind: 'npc', name: MTYPES[mm.type].name, text: msg.text }); }
         break;
       case 'hit': {
         const m = monsters.get(msg.m);
@@ -802,6 +875,7 @@
         else if (msg.loser === myId) { sfx('lose'); showPkResult('😵 THUA RỒI...', msg.reason === 'leave' ? 'Con chạy xa quá nên bị xử thua' : 'Tập luyện thêm rồi đấu lại nha!'); }
         break;
       }
+      case 'scene': playScene(msg.lines); break;
       case 'npcGone': senseis.delete(msg.key); bubbles.delete(msg.key); break;
       case 'story': setTimeout(() => showStory(msg.pages), 1800); break;
       case 'progress': {
@@ -821,15 +895,39 @@
 
   function onFish(msg) {
     const now = performance.now();
-    if (msg.state === 'wait') { fishing.state = 'wait'; fishing.since = now; sfx('cast'); }
-    else if (msg.state === 'bite') { fishing.state = 'bite'; fishing.since = now; sfx('bite'); say(myId, '❗ Cá cắn câu! Nhấn C!'); }
+    const at = (text, color, size = 17) => floaters.push({ x: fishing.bx || me.x - 120, y: WORLD.groundY - 30, vy: -55, life: 1.6, text, color, size });
+    if (msg.state === 'wait') {
+      Object.assign(fishing, { state: 'wait', since: now, castAt: now, bx: msg.bx ?? me.x - 120 });
+      sfx('cast');
+      // phao rơi xuống nước thì bắn tung tóe
+      setTimeout(() => { if (fishing.state) burst(fishing.bx, WORLD.groundY + 12, 8, { kind: 'dot', color: '#d8f3ff', speed: 140, angle: -Math.PI / 2, spread: 2, life: 0.5, size: 3, g: 500 }); }, 420);
+    } else if (msg.state === 'bite') { fishing.state = 'bite'; fishing.since = now; sfx('bite'); say(myId, '❗ Cá cắn câu! Nhấn C!'); }
     else {
+      const bx = fishing.bx;
       fishing.state = null;
       if (msg.state === 'caught') {
-        sfx(msg.trash ? 'trash' : 'catch');
-        floaters.push({ x: me.x - 90, y: WORLD.groundY - 40, vy: -60, life: 1.5, text: msg.trash ? '🩴 ' + msg.name : '🐟 +1 ' + msg.name, color: msg.trash ? '#ccc' : '#4fb3ff', size: 17 });
-        for (let i = 0; i < 10; i++) particles.push({ x: me.x - 110, y: WORLD.groundY + 12, vx: (Math.random() - 0.5) * 160, vy: -Math.random() * 220, life: 0.7, color: '#bfe9ff', r: 3 });
+        sfx('catch');
+        at((msg.rare ? '🌈 ' : '🐟 +1 ') + msg.name, msg.rare ? '#ffd23f' : '#4fb3ff', msg.rare ? 20 : 17);
+        burst(bx, WORLD.groundY + 10, 12, { kind: 'dot', color: '#bfe9ff', speed: 220, angle: -Math.PI / 2, spread: 1.6, life: 0.7, size: 3, g: 500 });
+        if (msg.rare) { burst(bx, WORLD.groundY - 20, 14, { kind: 'star', color: ['#ffd23f', '#ff8fb1', '#7fd3ff'], speed: 200, life: 0.9, size: 6, add: true }); toast(`Hiếm lắm luôn! Câu được ${msg.name}! 🌈`); }
+      } else if (msg.state === 'trash') {
+        sfx('trash'); at('🗑️ ' + msg.name, '#d0d0d0');
+      } else if (msg.state === 'miss') {
+        sfx('miss'); at('💨 Hụt!', '#ffffff', 19); toast(msg.text);
       } else { if (msg.state !== 'cancel') sfx('miss'); if (msg.text) toast(msg.text); }
+    }
+  }
+
+  // Đối thoại theo kịch bản: từng câu lần lượt hiện bong bóng, đọc thành tiếng và ghi vào khung chat
+  function playScene(lines) {
+    let at = 300;
+    for (const l of lines) {
+      setTimeout(() => {
+        say(l.who, l.text);
+        const mm = typeof l.who === 'string' && l.who[0] === 'm' ? monsters.get(Number(l.who.slice(1))) : null;
+        addChat({ kind: 'npc', name: mm ? MTYPES[mm.type].name : myName, text: l.text });
+      }, at);
+      at += Math.max(2400, 900 + l.text.length * 60);
     }
   }
 
@@ -842,6 +940,7 @@
   function updateOnline() {
     const names = [...players.values()].map((p) => p.info.name);
     $('online').textContent = `🟢 Online (${names.length}): ${names.join(', ')}`;
+    renderQuest(); // nhiệm vụ tỷ thí phụ thuộc vào ai đang online
   }
 
   function say(who, text) {
@@ -860,6 +959,9 @@
     platypus: { pitch: 1.15, rate: 0.9, male: true, base: 340, wave: 'sine' },
     chick: { pitch: 2.0, rate: 1.3, male: false, base: 820, wave: 'square' },
     croc: { pitch: 1.3, rate: 0.95, male: false, base: 440, wave: 'triangle' },
+    wolf: { pitch: 0.7, rate: 1.1, male: true, base: 190, wave: 'sawtooth' },
+    bull: { pitch: 0.4, rate: 0.85, male: true, base: 105, wave: 'sawtooth' },
+    boar: { pitch: 0.45, rate: 0.9, male: true, base: 125, wave: 'square' },
   };
   // đọc câu nói theo giọng người nói; ở xa quá (hơn 900px) thì không nghe thấy
   function speakAs(who, text, { urgent = false } = {}) {
@@ -867,6 +969,7 @@
     let voice, x;
     if (who === 'chief') { voice = VOICES.chief; x = WORLD.chiefX; }
     else if (who === 'river') { voice = VOICES.river; x = WORLD.riverGodX; }
+    else if (typeof who === 'string' && who[0] === 'm') { const mm = monsters.get(Number(who.slice(1))); if (!mm) return; voice = VOICES[mm.type] || VOICES.boar; x = mm.rx; }
     else if (typeof who === 'string') { const n = senseis.get(who); voice = VOICES.sensei; x = n ? n.rx : me.x; }
     else if (who === myId) { voice = VOICES[mySpecies]; x = me.x; }
     else { const p = players.get(who); if (!p) return; voice = VOICES[p.info.species]; x = p.rx; }
@@ -909,12 +1012,83 @@
     $('roses').textContent = p.roses; $('rosesNeed').textContent = `/${p.rosesNeed}`;
     $('fish').textContent = p.fish; $('fishNeed').textContent = `/${p.fishNeed}`;
     $('chest').textContent = p.chest; $('key').textContent = p.key;
+    renderQuest();
+  }
+
+  // ---------- Hướng dẫn nhiệm vụ + mũi tên chỉ đường ----------
+  // Trả về việc cần làm ngay, phím cần bấm và nơi cần tới (để vẽ mũi tên)
+  function questGuide() {
+    if (!progress || !WORLD) return null;
+    const p = progress, chief = { x: WORLD.chiefX, name: 'Trưởng làng', icon: '🐢', color: '#ffc93c' };
+    const dock = { x: WORLD.dock.x1 + 120, name: 'Thần Sông', icon: '🦛', color: '#7fd3ff' };
+    const inFields = me.x > 1720 && me.x < 3420;
+    switch (p.stage) {
+      case 0: return { now: 'Đi tới Trưởng làng, đứng gần rồi nhấn E', keys: ['E nói chuyện'], target: chief };
+      case 1:
+        if (p.roses >= p.rosesNeed) return { now: 'Đủ hoa rồi! Về gặp Trưởng làng, nhấn E để đổi rương báu', keys: ['E nói chuyện'], target: chief };
+        return { now: `Đánh quái để nhặt hoa hồng: ${p.roses}/${p.rosesNeed} 🌹`, keys: ['J đánh', 'K tuyệt chiêu', '↑ nhảy'], target: inFields ? null : { x: 2050, name: 'Đồng Ốc Sên', icon: '⚔️', color: '#ff9a9a' } };
+      case 2: return { now: 'Ra bờ sông bên TRÁI, đứng trên bến gỗ, nhấn E gặp Thần Sông', keys: ['E nói chuyện'], target: dock };
+      case 3:
+        if (p.fish >= p.fishNeed) return { now: 'Đủ cá rồi! Nhấn E gặp Thần Sông để cống nạp', keys: ['E nói chuyện'], target: dock };
+        return { now: `Đứng trên bến gỗ, nhấn C quăng cần, thấy ❗ nhấn C giật: ${p.fish}/${p.fishNeed} 🐟`, keys: ['C quăng / giật'], target: me.x <= WORLD.dock.x2 + 20 ? null : { ...dock, name: 'Bến câu cá', icon: '🎣' } };
+      case 4: return { now: 'Có rương và chìa rồi! Về làng gặp Trưởng làng, nhấn E rồi chọn "Mở rương báu"', keys: ['E nói chuyện'], target: chief };
+      case 5: return { now: 'Gặp Trưởng làng, nhấn E rồi chọn "Nhận nhiệm vụ tỷ thí"', keys: ['E nói chuyện'], target: chief };
+      case 6: {
+        let foe = null;
+        for (const pl of players.values()) if (pl.info.id !== myId && (!foe || Math.abs(pl.rx - me.x) < Math.abs(foe.rx - me.x))) foe = pl;
+        if (!foe) return { now: 'Chưa có người chơi khác trong làng. Rủ bạn bè mở cùng địa chỉ game để tỷ thí nhé!', keys: ['E luyện với Gấu Trúc'], target: null };
+        return { now: `Đến gần ${foe.info.name}, nhấn P để mời tỷ thí, thắng là tốt nghiệp!`, keys: ['P mời tỷ thí', 'J/K đánh'], target: { x: foe.rx, name: foe.info.name, icon: '🤺', color: '#c9a7ff' } };
+      }
+      default: return { now: 'Đã tốt nghiệp! Nhấn E ở Trưởng làng để xem lại câu chuyện', keys: ['E nói chuyện'], target: null };
+    }
+  }
+
+  // mũi tên nảy cạnh nhân vật chỉ về mục tiêu; mục tiêu ngoài màn hình thì có thêm mũi tên ở mép màn hình
+  function drawGuideArrow(t) {
+    const g = questGuide();
+    if (!g || !g.target || me.dead) return;
+    const dx = g.target.x - me.x, dist = Math.abs(dx);
+    if (dist < 110) return;
+    const dir = Math.sign(dx), bob = Math.sin(t * 6) * 6;
+    const arrow = (x, y, s, color) => {
+      ctx.save(); ctx.translate(x, y); ctx.scale(dir * s, s);
+      ctx.fillStyle = color; ctx.strokeStyle = '#3b2a2a'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(-14, -6); ctx.lineTo(2, -6); ctx.lineTo(2, -14); ctx.lineTo(18, 0); ctx.lineTo(2, 14); ctx.lineTo(2, 6); ctx.lineTo(-14, 6); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.restore();
+    };
+    const ax = me.x + dir * (58 + bob), ay = me.y - 46;
+    ctx.save(); ctx.globalAlpha = 0.95; arrow(ax, ay, 1, g.target.color); ctx.restore();
+    queueLabel(`${g.target.icon} ${g.target.name} · ${Math.round(dist / 10)}m`, ax, ay - 20, g.target.color, 12);
+    const left = camX + 34, right = camX + viewW - 34;
+    if (g.target.x < camX || g.target.x > camX + viewW) {
+      const ex = dir > 0 ? right : left, ey = WORLD.groundY - 150 + Math.sin(t * 4) * 4;
+      ctx.save(); ctx.fillStyle = 'rgba(255,248,239,.9)'; ctx.beginPath(); ctx.arc(ex - dir * 6, ey, 24, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      arrow(ex, ey, 1.1, g.target.color);
+      queueLabel(g.target.icon, ex - dir * 6, ey - 30, '#fff', 16);
+    }
+  }
+
+  // vẽ bảng nhiệm vụ: tên bước, việc cần làm ngay, phím cần bấm, hướng dẫn chi tiết
+  function renderQuest() {
+    if (!progress) return;
+    const p = progress, g = questGuide();
     const q = $('quest'); q.innerHTML = '';
     const b = document.createElement('b'); b.textContent = `${p.graduated ? '🎓' : '📜'} Bước ${p.stage + 1}/${p.stageCount}: ${p.stageTitle}`;
-    let extra = '';
-    if (p.stage === 1) extra = ` (${Math.min(p.roses, p.rosesNeed)}/${p.rosesNeed} 🌹)`;
-    if (p.stage === 3) extra = ` (${Math.min(p.fish, p.fishNeed)}/${p.fishNeed} 🐟)`;
-    q.append(b, document.createElement('br'), document.createTextNode(p.stageHint + extra));
+    q.appendChild(b);
+    if (g) {
+      const nowEl = document.createElement('span'); nowEl.className = 'q-now'; nowEl.textContent = '👉 ' + g.now;
+      const keys = document.createElement('span'); keys.className = 'q-keys';
+      for (const k of g.keys) {
+        const [key, ...rest] = k.split(' ');
+        const kb = document.createElement('kbd'); kb.textContent = key;
+        const lab = document.createElement('span'); lab.textContent = rest.join(' ');
+        keys.append(kb, lab);
+      }
+      q.append(nowEl, keys);
+    }
+    const hint = document.createElement('span'); hint.className = 'q-hint'; hint.textContent = p.stageHint;
+    q.appendChild(hint);
   }
 
   // ---------- Hội thoại ----------
@@ -2296,7 +2470,9 @@
     sign(1770, '→ Đồng Ốc Sên');
     for (const bx of [1850, 2120, 2330]) bush(bx, 0.9 + hash(bx) * 0.3);
     tree(2230, t, 'green', 0.8);
+    sign(2360, '⚠ Sói Xám Hầm Hố');
     sign(2590, '→ Rừng Nấm Lùn');
+    sign(3120, '⚠ Trâu Mộng Cơ Bắp');
     for (let x = 2560; x < 3420; x += 95) pine(x + hash(x) * 30, 110 + hash(x + 1) * 70, t);
     for (let x = 2620; x < 3400; x += 160) { ell(ctx, x, G - 6, 8, 6, '#e63946', INK); ctx.fillStyle = '#fff1d6'; ctx.fillRect(x - 2.5, G - 2, 5, 3); }
     sign(3480, '⚠ Hang Heo Đại Ca');
@@ -2419,11 +2595,13 @@
     return null;
   }
 
-  function drawLine(x, y, dir, state, t) {
+  function drawLine(x, y, dir, state, t, target = x + dir * 120, castP = 1) {
     const rodTipX = x + dir * 44, rodTipY = y - 78;
-    const bx = x + dir * 120;
+    const k = easeOut(Math.min(1, castP));
     const dip = state === 'bite' ? 6 + Math.sin(t * 30) * 3 : Math.sin(t * 3) * 1.5;
-    const by = WORLD.groundY + 14 + dip;
+    const bx = rodTipX + (target - rodTipX) * k;
+    // lúc đang bay thì phao vẽ thành đường vòng cung lên cao rồi rơi xuống nước
+    const by = castP < 1 ? rodTipY + (WORLD.groundY + 14 - rodTipY) * k - Math.sin(k * Math.PI) * 70 : WORLD.groundY + 14 + dip;
     ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(rodTipX, rodTipY); ctx.quadraticCurveTo((rodTipX + bx) / 2, rodTipY + 20, bx, by); ctx.stroke();
     ell(ctx, bx, by, 5, 5, '#ff4d6d', INK); ell(ctx, bx, by - 3, 5, 2.5, '#fff');
@@ -2505,9 +2683,10 @@
     const anim = myAnim(now);
     const squash = Math.max(0, 1 - (now - me.landAt) / 220) * me.landPow;
     drawAnimal(ctx, me.x, me.y, mySpecies, mySkin, { t, dir: me.dir, face: me.face, anim, squash, alpha: blink ? 0.4 : 1, atkP: anim.startsWith('atk') ? 1 - (me.atkUntil - now) / ATK_DUR[me.atkK] : 0 });
-    if (fishing.state) drawLine(me.x, me.y, me.dir, fishing.state, t);
+    if (fishing.state) drawLine(me.x, me.y, me.dir, fishing.state, t, fishing.bx, (now - fishing.castAt) / 420);
     queueLabel(`${myName} · Lv${progress ? progress.level : 1}`, me.x, me.y + 16, '#fff', 12);
 
+    drawGuideArrow(t);
     drawLighting(t);
     drawFx(dt);
     for (let i = particles.length - 1; i >= 0; i--) {
@@ -2530,6 +2709,7 @@
       if (who === 'chief') { x = WORLD.chiefX + 10; y = WORLD.groundY - 96; }
       else if (who === 'river') { x = WORLD.riverGodX; y = WORLD.groundY - 150; }
       else if (who === myId) { x = me.x; y = me.y - 84; }
+      else if (typeof who === 'string' && who[0] === 'm') { const mm = monsters.get(Number(who.slice(1))); if (!mm) continue; x = mm.rx; y = WORLD.groundY - MTYPES[mm.type].h - 44; }
       else if (typeof who === 'string') { const n = senseis.get(who); if (!n) continue; x = n.rx; y = WORLD.groundY - 104; }
       else { const p = players.get(who); if (!p) continue; x = p.rx; y = p.ry - 84; }
       drawBubble(ctx, b.text, Math.max(camX + 130, Math.min(camX + viewW - 130, x)), y, who === 'chief' || who === 'river');

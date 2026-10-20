@@ -12,6 +12,17 @@ npm start            # mặc định cổng 3000, đổi bằng PORT=8080 npm st
 
 Server in ra địa chỉ LAN, ví dụ `http://192.168.1.10:3000`. Mở địa chỉ đó trên các máy cùng mạng để chơi chung, chat với nhau.
 
+## Quái vật
+
+| Quái | Đặc điểm |
+| --- | --- |
+| Ốc Sên Lười, Nấm Lùn Cáu Kỉnh | Quái đầu game, dễ đánh |
+| Sói Xám Hầm Hố | Máu 120, đánh đau, tự phát hiện và đuổi rất nhanh |
+| Trâu Mộng Cơ Bắp | Máu 230, đánh rất đau, cào đất lấy đà rồi lao húc |
+| Heo Rừng Đại Ca (boss) | Máu 520. Lần đầu vào hang, heo đứng lại đối thoại với nhân vật; khi bị hạ thì hé lộ về Vua Mèo Mun Bóng Tối |
+
+Quái trâu biết nói khi phát hiện người chơi, câu nói được đọc thành tiếng.
+
 ## Nhân vật
 
 | Loài | J (đánh) | K (tuyệt chiêu) |
@@ -26,11 +37,13 @@ Mỗi chiêu có hiệu ứng riêng: vết chém phát sáng, sóng âm, hạt 
 
 ## Hành trình
 
+Bảng nhiệm vụ ở góc trái luôn ghi **việc cần làm ngay**, **phím cần bấm** và hướng dẫn chi tiết. Cạnh nhân vật có **mũi tên chỉ đường** tới người cần gặp hoặc nơi cần tới (kèm khoảng cách); mục tiêu ở ngoài màn hình thì có thêm mũi tên ở mép màn hình.
+
 1. Gặp **Trưởng làng** (cụ rùa đội nón), nhận nhiệm vụ săn hoa hồng.
 2. Đánh quái ở phía phải làng, quái rơi **🌹 hoa hồng đỏ**, đi ngang qua là tự nhặt vào hành trang.
 3. Đủ **10 🌹** thì đổi lấy **🎁 rương báu**. Rương bị khóa, chìa khóa nằm ở lòng sông.
 4. Ra **bờ sông** phía trái làng gặp **Thần Sông** (chú hà mã đội vương miện). Ngài muốn **10 🐟 cá** để cống nạp. Phải nhận nhiệm vụ này rồi mới câu cá được.
-5. Đứng trên bến gỗ, nhấn **C** để thả câu, thấy dấu ❗ thì nhấn **C** để giật (có khi câu trúng dép 🩴).
+5. Đứng trên bến gỗ, nhấn **C** để quăng cần: phao rơi ở chỗ ngẫu nhiên, quăng càng xa càng dễ ra cá. Thấy dấu ❗ thì nhấn **C** để giật. Không phải lần nào cũng được cá: có lúc trúng rác (dép, lon, ủng rách, rong rêu...), có lúc giật hụt, có lúc chờ mãi không có cá cắn câu; hiếm hoi mới gặp **Cá Koi Cầu Vồng**.
 6. Cống nạp cá, Thần Sông mò được **🗝️ chìa khóa**.
 7. Mang rương và chìa về cho Trưởng làng mở, nhận **quà VIP**.
 8. Nhiệm vụ cuối **Khóa Học Trưởng Thành**: thắng một trận **tỷ thí PK với người chơi khác**. Đứng gần bạn ấy, nhấn **P** để mời; bạn ấy nhấn **Y** để nhận lời (**N** để từ chối). Muốn luyện tay trước thì nhờ Trưởng làng gọi **Sư Phụ Gấu Trúc**, nhưng thắng gấu trúc không được tính nhiệm vụ.

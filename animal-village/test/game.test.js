@@ -302,6 +302,73 @@ test('hành trình đầy đủ: hoa hồng → rương → Thần Sông → câ
   assert.strictEqual(saved.tokenAAAA1.species, 'croc');
 });
 
+// tạo game với random cố định và 1 người chơi có sẵn tiến độ
+async function soloGame(randomValue, rec, timing = {}) {
+  const dataFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'tv-')), 'players.json');
+  fs.writeFileSync(dataFile, JSON.stringify({ tokenSOLO02: { token: 'tokenSOLO02', name: 'Mỏ', species: 'croc', skin: 0, level: 1, exp: 0, roses: 0, fish: 0, chest: 0, key: 0, giftsOpened: 0, stage: 1, ...rec } }));
+  const game = createGame({ dataFile, port: 0, host: '127.0.0.1', random: () => randomValue, timing: { biteMin: 20, biteMax: 20, biteWindow: 400, noBiteMs: 60, ...timing } });
+  const port = await new Promise((r) => game.listen(r));
+  const a = new Client(port); await a.open();
+  a.send({ t: 'join', token: 'tokenSOLO02', name: 'Mỏ' });
+  await a.wait((m) => m.t === 'welcome');
+  return { game, a, close: async () => { a.ws.close(); await new Promise((r) => game.close(r)); } };
+}
+
+test('câu cá ngẫu nhiên: lúc ra cá, lúc trúng rác, lúc hụt, lúc không có cá cắn câu', async () => {
+  // giá trị random cố định quyết định kết quả: 0.01 cá, 0.7 rác, 0.86 hụt, 0.95 không cắn câu
+  const expect = { 0.01: 'caught', 0.7: 'trash', 0.86: 'miss', 0.95: 'nothing' };
+  const spots = new Set();
+  for (const [rv, state] of Object.entries(expect)) {
+    const { a, close } = await soloGame(Number(rv), { stage: 3 });
+    try {
+      a.moveTo(D.WORLD.dock.x1 + 80, G, -1); await sleep(20);
+      a.send({ t: 'cast' });
+      const w = await a.wait((m) => m.t === 'fish' && m.state === 'wait');
+      assert.ok(w.bx < D.WORLD.waterEnd && w.bx > D.WORLD.waterEnd - 25 - D.FISHING.castRange - 1, 'phao rơi trên mặt sông: ' + w.bx);
+      spots.add(w.bx);
+      if (state !== 'nothing') { await a.wait((m) => m.t === 'fish' && m.state === 'bite'); a.send({ t: 'reel' }); }
+      const res = await a.wait((m) => m.t === 'fish' && m.state !== 'wait' && m.state !== 'bite');
+      assert.strictEqual(res.state, state, `random ${rv}`);
+      if (state === 'trash') assert.ok(D.TRASH.includes(res.name));
+      await sleep(30);
+      assert.strictEqual(a.progress.fish, state === 'caught' ? 1 : 0, 'chỉ cá thật mới được tính');
+    } finally { await close(); }
+  }
+  assert.ok(spots.size >= 3, 'phao rơi ở nhiều chỗ khác nhau');
+});
+
+test('quái trâu: tự phát hiện, nói chuyện, Trâu Mộng lấy đà húc; đối thoại với Heo Rừng Đại Ca', async () => {
+  const { game, a, close } = await soloGame(0.01, { stage: 1 });
+  try {
+    const bull = game.monsters.find((m) => m.type === 'bull');
+    for (const m of game.monsters) if (m !== bull && m.type !== 'boar') m.dead = true, m.respawnAt = Infinity;
+    bull.x = 3300;
+    a.moveTo(3200, G, 1);
+    const talk = await a.wait((m) => m.t === 'bubble' && m.who === 'm' + bull.id);
+    assert.ok(D.MONSTER_TYPES.bull.lines.includes(talk.text));
+    await a.wait((m) => m.t === 'snap' && m.m.some((x) => x[0] === bull.id && x[5] === 1), 2000);
+    // Lần đầu vào hang: Heo Rừng đứng lại đối thoại
+    bull.dead = true; bull.respawnAt = Infinity;
+    const boar = game.monsters.find((m) => m.type === 'boar');
+    a.moveTo(3460, G, 1);
+    const sc = await a.wait((m) => m.t === 'scene');
+    assert.strictEqual(sc.lines.length, D.BOAR_SCENE.intro.length);
+    assert.strictEqual(sc.lines[0].who, 'm' + boar.id);
+    assert.strictEqual(sc.lines[1].who, a.id);
+    assert.match(sc.lines[1].text, /Mỏ/);
+    assert.ok(boar.calmUntil > Date.now(), 'heo đứng yên trong lúc nói');
+    a.moveTo(3470, G, 1); await sleep(120);
+    assert.ok(!a.msgs.some((m) => m.t === 'scene'), 'chỉ đối thoại lần đầu');
+    // Hạ Heo Rừng: lời trăng trối nhắc tới Vua Mèo Mun
+    boar.hp = 5; boar.x = 3500; boar.calmUntil = 0;
+    a.moveTo(3470, G, 1); await sleep(20);
+    a.send({ t: 'attack', k: 0 });
+    const end = await a.wait((m) => m.t === 'scene');
+    assert.match(end.lines[0].text, /Vua Mèo Mun/);
+    assert.strictEqual(game.records.tokenSOLO02.boarMet, true);
+  } finally { await close(); }
+});
+
 test('Sư Phụ Gấu Trúc chỉ để luyện tập, thắng không được tốt nghiệp', { timeout: 60000 }, async () => {
   const dataFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'tv-')), 'players.json');
   fs.writeFileSync(dataFile, JSON.stringify({ tokenSOLO01: { token: 'tokenSOLO01', name: 'Chuột', species: 'hamster', skin: 0, level: 1, exp: 0, roses: 0, fish: 0, chest: 0, key: 0, giftsOpened: 1, stage: 6 } }));

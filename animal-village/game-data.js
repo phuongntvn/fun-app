@@ -98,13 +98,42 @@ const SPECIES = {
 const MONSTER_TYPES = {
   snail: { name: 'Ốc Sên Lười', hp: 30, speed: 18, exp: 6, rose: 0.4, dmg: 4, w: 40, h: 30, respawn: 4000 },
   mushroom: { name: 'Nấm Lùn Cáu Kỉnh', hp: 55, speed: 40, exp: 10, rose: 0.55, dmg: 7, w: 40, h: 42, respawn: 5000 },
-  boar: { name: 'Heo Rừng Đại Ca', hp: 420, speed: 55, exp: 80, rose: 1, roseCount: 3, dmg: 14, w: 90, h: 70, respawn: 25000, boss: true },
+  // quái trâu hơn: chase = tốc độ khi đuổi theo, charge = biết lấy đà húc; lines = câu nói khi phát hiện người chơi
+  wolf: {
+    name: 'Sói Xám Hầm Hố', hp: 120, speed: 55, chase: 2.2, exp: 24, rose: 0.7, dmg: 12, w: 56, h: 46, respawn: 8000, tough: true,
+    lines: ['Gừ gừ... con mồi ngon đây rồi!', 'Hú hú! Đứa nào dám vào rừng của ta?', 'Răng ta mới đánh sáng bóng, thử không?'],
+  },
+  bull: {
+    name: 'Trâu Mộng Cơ Bắp', hp: 230, speed: 32, chase: 1, charge: true, exp: 40, rose: 0.9, roseCount: 2, dmg: 18, w: 82, h: 64, respawn: 12000, tough: true,
+    lines: ['Mooo! Cơ bắp này là thật 100% đó!', 'Ta tập gym 10 năm chỉ để húc ngươi!', 'Đứng yên đó! Ta lấy đà cái đã!'],
+  },
+  boar: {
+    name: 'Heo Rừng Đại Ca', hp: 520, speed: 55, chase: 1.6, exp: 100, rose: 1, roseCount: 3, dmg: 16, w: 90, h: 70, respawn: 25000, boss: true,
+    lines: ['Ụt ịt! Đau chưa nhóc?', 'Đại ca ta mà ra tay thì ngươi xong rồi!', 'Hừ, mới khởi động thôi đó!'],
+  },
+};
+
+// Cảnh đối thoại lần đầu gặp Heo Rừng Đại Ca ('boar' là heo, 'me' là người chơi), và lời trăng trối khi bị hạ
+const BOAR_SCENE = {
+  intro: [
+    ['boar', 'Ê nhóc! Đứa nào dám bước chân vào lãnh địa của Heo Rừng Đại Ca?'],
+    ['me', 'Tui là {name}! Tui tới để dẹp yên khu rừng, trả lại hoa hồng cho làng!'],
+    ['boar', 'Hô hô! Hoa hồng hả? Đại ca của ta còn đang thu gom cả nắng mặt trời kìa... Ấy, lỡ miệng!'],
+    ['me', 'Đại ca của đại ca? Là ai vậy?'],
+    ['boar', 'Ta không nói đâu! Muốn biết thì thắng ta trước đã. Xông lên!!'],
+  ],
+  defeat: [
+    ['boar', 'Hự... được lắm nhóc... Nhưng Vua Mèo Mun Bóng Tối sẽ không tha cho các ngươi đâu... ụt ịt...'],
+    ['me', 'Vua Mèo Mun Bóng Tối? Phải về kể cho Trưởng làng nghe mới được!'],
+  ],
 };
 
 // Vị trí sinh quái: [loại, minX, maxX]
 const MONSTER_SPAWNS = [
   ['snail', 1750, 2100], ['snail', 1850, 2250], ['snail', 1950, 2400], ['snail', 2050, 2500], ['snail', 1750, 2500],
+  ['wolf', 2380, 2700], ['wolf', 2500, 2850],
   ['mushroom', 2650, 2950], ['mushroom', 2750, 3100], ['mushroom', 2850, 3250], ['mushroom', 2950, 3350],
+  ['bull', 3150, 3480], ['bull', 3250, 3520],
   ['boar', 3600, 4100],
 ];
 
@@ -112,15 +141,16 @@ const ROSES_FOR_CHEST = 10;
 const FISH_FOR_KEY = 10;
 
 // Các bước của hành trình (stage)
+// title: tên bước; hint: hướng dẫn chi tiết (gặp ai, đi đâu, bấm phím gì)
 const STAGES = [
-  { title: 'Gặp Trưởng làng', hint: 'Đến nói chuyện với Trưởng làng (phím E)' },
-  { title: 'Săn hoa hồng đỏ', hint: `Đánh quái để rơi 🌹, đi ngang qua là tự nhặt. Đủ ${ROSES_FOR_CHEST} bông thì về đổi rương báu` },
-  { title: 'Tìm chìa khóa ở lòng sông', hint: 'Đi về phía TRÁI làng, ra bờ sông gặp Thần Sông' },
-  { title: 'Câu cá cống nạp Thần Sông', hint: `Đứng ở bến sông, nhấn C để câu. Câu đủ ${FISH_FOR_KEY} con cá rồi nói chuyện với Thần Sông` },
-  { title: 'Mang rương và chìa về làng', hint: 'Về gặp Trưởng làng để mở rương báu' },
-  { title: 'Nhận nhiệm vụ cuối cùng', hint: 'Con đã nhận quà VIP! Gặp Trưởng làng để nhận nhiệm vụ cuối: Khóa Học Trưởng Thành' },
-  { title: 'Tỷ thí PK', hint: 'Đến gần một người chơi khác, nhấn P để mời tỷ thí. Thắng 1 trận với người chơi khác là tốt nghiệp! (Đấu với Sư Phụ Gấu Trúc chỉ để luyện tập)' },
-  { title: 'Tốt nghiệp Khóa Học Trưởng Thành', hint: 'Con đã trưởng thành! Hẹn gặp ở phần tiếp theo: Hành Trình Đảo Mây Bay...' },
+  { title: 'Gặp Trưởng làng', hint: 'Đi theo mũi tên vàng tới Trưởng làng (cụ rùa đội nón lá, có dấu ❗ trên đầu). Đứng gần ông rồi nhấn E, chọn "Con đi săn hoa hồng ngay!".' },
+  { title: 'Săn hoa hồng đỏ', hint: `Đi sang PHẢI qua cổng làng tới Đồng Ốc Sên. Đứng sát quái, nhấn J để đánh, K để tung tuyệt chiêu. Quái rơi 🌹, đi ngang qua là tự nhặt. Đủ ${ROSES_FOR_CHEST} 🌹 thì về gặp Trưởng làng (E) đổi rương báu. Cẩn thận Sói và Trâu Mộng ở sâu bên phải, đánh rất đau!` },
+  { title: 'Tìm chìa khóa ở lòng sông', hint: 'Chìa khóa rương ở dưới sông. Đi sang TRÁI qua làng tới bờ sông, đứng trên bến gỗ rồi nhấn E để gặp Thần Sông (chú hà mã đội vương miện).' },
+  { title: 'Câu cá cống nạp Thần Sông', hint: `Đứng trên bến gỗ, nhấn C để quăng cần. Khi phao chìm và hiện ❗ thì nhấn C ngay để giật. Có lúc trúng rác hoặc hụt, cứ câu tiếp! Đủ ${FISH_FOR_KEY} 🐟 thì nhấn E gặp Thần Sông để cống nạp.` },
+  { title: 'Mang rương và chìa về làng', hint: 'Đã có 🎁 và 🗝️! Đi sang PHẢI về làng, gặp Trưởng làng (E) và chọn "Mở rương báu".' },
+  { title: 'Nhận nhiệm vụ cuối cùng', hint: 'Con đã nhận quà VIP! Gặp Trưởng làng (E) và chọn "Nhận nhiệm vụ tỷ thí" để vào Khóa Học Trưởng Thành.' },
+  { title: 'Tỷ thí PK', hint: 'Tìm một người chơi khác (mũi tên tím chỉ đường), đứng gần rồi nhấn P để mời. Bạn ấy nhấn Y là bắt đầu đếm ngược. Dùng J/K để đánh, thắng 1 trận là tốt nghiệp! (Sư Phụ Gấu Trúc ở chỗ Trưởng làng chỉ để luyện tập.)' },
+  { title: 'Tốt nghiệp Khóa Học Trưởng Thành', hint: 'Con đã trưởng thành! Gặp Trưởng làng (E) để xem lại câu chuyện, hoặc đi lại hành trình từ đầu. Hẹn gặp ở phần 2: Hành Trình Đảo Mây Bay...' },
 ];
 
 // Tỷ thí PK
@@ -136,10 +166,20 @@ const PK = {
 // Sư Phụ Gấu Trúc: đối thủ luyện tập, thắng ông không được tính nhiệm vụ tỷ thí
 const SENSEI = { name: 'Sư Phụ Gấu Trúc', hp: 100, speed: 95, range: 70, dmgMin: 6, dmgMax: 10, atkEvery: 1100 };
 
+// Câu cá: mỗi lần quăng cần phao rơi ở một chỗ ngẫu nhiên; quăng càng xa càng dễ trúng cá, ít rác.
+// Có lần không có cá cắn câu, có lần giật hụt, có lần trúng rác.
+const FISHING = {
+  castRange: 190, // phao rơi trong khoảng này tính từ mép sông ra xa (px)
+  noBite: 0.12, // tỉ lệ chờ mãi không có cá cắn câu
+  fish: 0.55, trash: 0.25, // khi giật đúng lúc: phần còn lại là giật hụt
+  farBonus: 0.15, // quăng xa nhất thì cộng thêm tỉ lệ ra cá (trừ vào rác)
+};
 const FISH = [
   { name: 'Cá Rô Mập', w: 30 }, { name: 'Cá Chép Ngố', w: 25 }, { name: 'Cá Trê Râu Dài', w: 18 },
-  { name: 'Cá Vàng Tiểu Thư', w: 12 }, { name: 'Chiếc Dép Tổ Ong', w: 15, trash: true },
+  { name: 'Cá Vàng Tiểu Thư', w: 12 }, { name: 'Cá Koi Cầu Vồng', w: 4, rare: true },
 ];
+const TRASH = ['Chiếc Dép Tổ Ong', 'Lon Nước Ngọt Rỗng', 'Chiếc Ủng Rách', 'Mớ Rong Rêu', 'Cái Chai Có Thư... trống trơn'];
+const FISH_MISS = ['Cá giãy mạnh quá, tuột mất rồi!', 'Hụt! Cá chỉ rỉa mồi rồi bơi đi.', 'Dây câu rối tung, cá chạy mất tiêu!'];
 
 const LINES = {
   greet: [
@@ -193,7 +233,7 @@ function fill(text, vars = {}) {
 }
 
 const GAME_DATA = {
-  WORLD, SPECIES, MONSTER_TYPES, MONSTER_SPAWNS, STAGES, FISH, LINES, PK, SENSEI,
+  WORLD, SPECIES, MONSTER_TYPES, MONSTER_SPAWNS, STAGES, FISH, TRASH, FISH_MISS, FISHING, BOAR_SCENE, LINES, PK, SENSEI,
   ROSES_FOR_CHEST, FISH_FOR_KEY, fill,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = GAME_DATA;
