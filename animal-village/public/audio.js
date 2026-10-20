@@ -116,6 +116,13 @@
     lose: (t) => notes([523, 494, 466, 440], t, 0.18, { type: 'triangle', vol: 0.14 }),
     thunder: (t) => { noise(t, 2.2, { vol: 0.6, freq: 180, to: 60, filter: 'lowpass' }); noise(t + 0.05, 0.4, { vol: 0.3, freq: 900, filter: 'lowpass' }); },
     page: (t) => noise(t, 0.12, { vol: 0.12, freq: 4000, to: 1500, filter: 'highpass' }),
+    // nhạc kết: hợp âm vang lên chậm rãi rồi giai điệu đi lên
+    ending: (t) => {
+      [[60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62, 67]].forEach((ch, i) => ch.forEach((n) => tone(440 * Math.pow(2, (n - 69) / 12), t + i * 1.1, 1.6, { type: 'triangle', vol: 0.08, attack: 0.25 })));
+      notes([72, 74, 76, 79, 81, 79, 84].map((n) => 440 * Math.pow(2, (n - 69) / 12)), t + 0.4, 0.55, { type: 'sine', vol: 0.12 });
+    },
+    // tiếng "dừng hình" kiểu phim: quét xuống + hai nốt trầm
+    tbc: (t) => { noise(t, 0.35, { vol: 0.35, freq: 4000, to: 200 }); tone(196, t + 0.3, 0.5, { type: 'sawtooth', vol: 0.12 }); tone(147, t + 0.85, 1.2, { type: 'sawtooth', vol: 0.12, vibrato: 5 }); },
   };
 
   // vol: 0..1, dùng để giảm tiếng của người chơi ở xa
@@ -171,6 +178,8 @@
       step++;
     }
   }
+  // tạm nhỏ nhạc nền (khi chiếu đoạn kết) rồi trả lại
+  function duck(on) { if (ac) musicBus.gain.setTargetAtTime(on ? 0 : settings.music ? 0.32 : 0, ac.currentTime, 0.4); }
   function setMood(m) { if (SONGS[m] && m !== mood) { mood = m; step = 0; } }
 
   // Tiếng mưa rơi liên tục, to nhỏ theo độ mưa
@@ -249,5 +258,5 @@
     setTimeout(() => g.disconnect(), (t - ac.currentTime) * 1000 + 500);
   }
 
-  window.Sound = { unlock, play, set, setMood, setRain, speak, stopSpeech, hasVietnamese, settings };
+  window.Sound = { unlock, play, set, setMood, setRain, speak, stopSpeech, hasVietnamese, duck, settings };
 })();

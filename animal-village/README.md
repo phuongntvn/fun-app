@@ -22,7 +22,7 @@ Server in ra địa chỉ LAN, ví dụ `http://192.168.1.10:3000`. Mở địa 
 | Gà Con Cáu Kỉnh | Mổ Liên Hoàn (nhanh) | Nổi Khùng Xì Khói (đánh 2 bên) |
 | Tiểu Thư Cá Sấu | Cắn Một Phát | Quật Đuôi (đánh phía sau) |
 
-Mỗi loài có 3 skin riêng, mỗi skin có hiệu ứng riêng chạy mượt (lấp lánh, tim bay, hào quang, lửa, khói, bong bóng, lá rơi, cánh hoa).
+Mỗi chiêu có hiệu ứng riêng: vết chém phát sáng, sóng âm, hạt hướng dương bay để lại vệt sáng, hàm cá sấu đớp, đuôi quét, đất nứt đá văng, vụ nổ giận dữ, kèm chữ tượng thanh và rung màn hình khi tung tuyệt chiêu; màu hiệu ứng ăn theo màu skin. Mỗi loài có 3 skin riêng, mỗi skin có hiệu ứng riêng chạy mượt (lấp lánh, tim bay, hào quang, lửa, khói, bong bóng, lá rơi, cánh hoa).
 
 ## Hành trình
 
@@ -34,7 +34,7 @@ Mỗi loài có 3 skin riêng, mỗi skin có hiệu ứng riêng chạy mượt
 6. Cống nạp cá, Thần Sông mò được **🗝️ chìa khóa**.
 7. Mang rương và chìa về cho Trưởng làng mở, nhận **quà VIP**.
 8. Nhiệm vụ cuối **Khóa Học Trưởng Thành**: thắng một trận **tỷ thí PK với người chơi khác**. Đứng gần bạn ấy, nhấn **P** để mời; bạn ấy nhấn **Y** để nhận lời (**N** để từ chối). Muốn luyện tay trước thì nhờ Trưởng làng gọi **Sư Phụ Gấu Trúc**, nhưng thắng gấu trúc không được tính nhiệm vụ.
-9. Thắng là tốt nghiệp, mở ra câu chuyện dẫn sang phần 2: *Hành Trình Đảo Mây Bay*.
+9. Thắng là tốt nghiệp, mở ra câu chuyện 5 trang dẫn sang phần 2, rồi tới **đoạn kết mở**: hoàng hôn trên đồi, Đảo Mây Bay lơ lửng phía xa, đôi mắt Vua Mèo Mun lóe lên trong mây, hình dừng lại ngả màu sepia và hiện **TO BE CONTINUED...** Xem lại được bất cứ lúc nào ở chỗ Trưởng làng.
 
 ### Luật tỷ thí PK
 
