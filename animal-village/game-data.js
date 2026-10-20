@@ -169,7 +169,7 @@ const SENSEI = { name: 'Sư Phụ Gấu Trúc', hp: 100, speed: 95, range: 70, d
 // Câu cá: mỗi lần quăng cần phao rơi ở một chỗ ngẫu nhiên; quăng càng xa càng dễ trúng cá, ít rác.
 // Có lần không có cá cắn câu, có lần giật hụt, có lần trúng rác.
 const FISHING = {
-  castRange: 190, // phao rơi trong khoảng này tính từ mép sông ra xa (px)
+  castRange: 140, // phao rơi trong khoảng này tính từ mép sông ra xa (px), đủ gần để không bị khung chat che
   noBite: 0.12, // tỉ lệ chờ mãi không có cá cắn câu
   fish: 0.55, trash: 0.25, // khi giật đúng lúc: phần còn lại là giật hụt
   farBonus: 0.15, // quăng xa nhất thì cộng thêm tỉ lệ ra cá (trừ vào rác)

@@ -12,6 +12,26 @@ npm start            # mặc định cổng 3000, đổi bằng PORT=8080 npm st
 
 Server in ra địa chỉ LAN, ví dụ `http://192.168.1.10:3000`. Mở địa chỉ đó trên các máy cùng mạng để chơi chung, chat với nhau.
 
+## Chơi với bạn bè ở xa (khác mạng)
+
+Máy bạn chạy `npm start` là máy chủ. Người ở xa không vào được địa chỉ `192.168.x.x` vì đó là địa chỉ trong nhà bạn. Có 3 cách:
+
+**Cách 1 (dễ nhất, miễn phí): Cloudflare Tunnel.** Tạo một link `https://...` công khai trỏ về máy bạn, không cần mở cổng modem.
+
+```powershell
+winget install --id Cloudflare.cloudflared      # cài một lần
+npm start                                        # cửa sổ 1: chạy game
+cloudflared tunnel --url http://localhost:3000   # cửa sổ 2: tạo link
+```
+
+Cửa sổ 2 in ra dòng dạng `https://ten-ngau-nhien.trycloudflare.com`. Gửi link đó cho bạn bè là vào chơi được. Link đổi mỗi lần chạy lại và chỉ sống khi cả 2 cửa sổ còn mở.
+
+**Cách 2: Tailscale.** Cả hai người cài Tailscale (https://tailscale.com), đăng nhập, rồi bạn bè mở `http://<IP Tailscale của máy bạn>:3000`. Riêng tư hơn vì chỉ người trong mạng Tailscale vào được.
+
+**Cách 3: Mở cổng (port forwarding) trên modem.** Vào trang quản lý modem, chuyển cổng 3000 về IP máy bạn, rồi gửi `http://<IP công cộng>:3000` (xem IP công cộng ở https://whatismyipaddress.com). Cách này hay bị nhà mạng chặn và lộ IP nhà bạn, nên ưu tiên cách 1.
+
+Game tự dùng kết nối bảo mật khi mở bằng link `https`, nên không phải sửa gì trong code.
+
 ## Quái vật
 
 | Quái | Đặc điểm |

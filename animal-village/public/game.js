@@ -901,7 +901,7 @@
       sfx('cast');
       // phao rơi xuống nước thì bắn tung tóe
       setTimeout(() => { if (fishing.state) burst(fishing.bx, WORLD.groundY + 12, 8, { kind: 'dot', color: '#d8f3ff', speed: 140, angle: -Math.PI / 2, spread: 2, life: 0.5, size: 3, g: 500 }); }, 420);
-    } else if (msg.state === 'bite') { fishing.state = 'bite'; fishing.since = now; sfx('bite'); say(myId, '❗ Cá cắn câu! Nhấn C!'); }
+    } else if (msg.state === 'bite') { fishing.state = 'bite'; fishing.since = now; sfx('bite'); } // chỉ báo bằng dấu ❗ trên phao và tiếng nước
     else {
       const bx = fishing.bx;
       fishing.state = null;
