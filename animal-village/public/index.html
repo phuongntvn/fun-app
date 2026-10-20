@@ -109,7 +109,7 @@
         <div id="chestStage" class="chest">🎁</div>
         <div id="giftReveal" class="hidden">
           <div class="vip-tag">✨ QUÀ VIP ✨</div>
-          <img id="giftImg" src="hub.png" alt="Hub Type-C cho MacBook">
+          <canvas id="giftArt" width="440" height="260"></canvas>
           <h2 id="giftName"></h2>
           <p class="quote"><b>🐢 Trưởng làng:</b> “<span id="giftText"></span>”</p>
           <button type="button" id="giftClose" class="primary">Cảm ơn ông! 🥰</button>
@@ -118,10 +118,28 @@
       <div id="confetti"></div>
     </div>
 
+    <div id="env">
+      <button type="button" id="envToggle" aria-expanded="false" title="Chỉnh trời và thời tiết">🌤️ Trời</button>
+      <div id="envMenu" class="hidden">
+        <div class="env-row"><span>Thời gian</span>
+          <button type="button" data-time="day">☀️ Sáng</button>
+          <button type="button" data-time="dusk">🌇 Chiều</button>
+          <button type="button" data-time="night">🌙 Tối</button>
+          <button type="button" data-time="auto">🔄 Tự động</button>
+        </div>
+        <div class="env-row"><span>Thời tiết</span>
+          <button type="button" data-weather="clear">🌈 Nắng</button>
+          <button type="button" data-weather="rain">🌧️ Mưa</button>
+          <button type="button" data-weather="snow">❄️ Tuyết</button>
+        </div>
+      </div>
+    </div>
+
     <div id="toast"></div>
     <div id="disconnected" class="modal hidden"><div class="gift-card"><h2>Mất kết nối 😢</h2><p>Đang kết nối lại với làng...</p></div></div>
   </section>
 
+  <script src="game-data.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

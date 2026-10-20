@@ -104,6 +104,13 @@ test('hành trình đầy đủ: hoa hồng → rương → Thần Sông → câ
     const chat = await b.wait((m) => m.t === 'chat' && m.kind === 'player');
     assert.strictEqual(chat.name, 'Sấu Hồng');
 
+    // Chưa có nhiệm vụ câu cá thì không câu được, kể cả khi đứng ở bến
+    a.moveTo(D.WORLD.dock.x1 + 80, G, -1); await sleep(20);
+    a.send({ t: 'cast' });
+    const noFish = await a.wait((m) => m.t === 'fish');
+    assert.strictEqual(noFish.state, 'cancel');
+    assert.match(noFish.text, /Chưa có nhiệm vụ câu cá/);
+
     // Bước 1: nhận nhiệm vụ săn hoa hồng
     let dlg = await a.npc('chief', 'talk');
     assert.match(dlg.text, /10 bông hoa hồng/);
@@ -195,9 +202,8 @@ test('hành trình đầy đủ: hoa hồng → rương → Thần Sông → câ
     a.clear('gift');
     a.send({ t: 'npc', npc: 'chief', action: 'open' });
     const gift = await a.wait((m) => m.t === 'gift');
-    assert.strictEqual(gift.image, 'hub.png');
-    assert.match(gift.text, /HDMI, USB, Type-C/);
-    assert.match(gift.text, /cổng thẻ nhớ/);
+    assert.match(gift.text, /món quà VIP nhất/);
+    assert.ok(!/hub|HDMI/i.test(JSON.stringify(gift)), 'không còn nhắc tới hub');
     const ann = await b.wait((m) => m.t === 'chat' && m.kind === 'system' && /QUÀ VIP/.test(m.text));
     assert.match(ann.text, /Sấu Hồng/);
     await sleep(50);
@@ -259,8 +265,9 @@ test('phục vụ file tĩnh và chặn path traversal', async () => {
     const home = await fetch(`http://127.0.0.1:${port}/`);
     assert.strictEqual(home.status, 200);
     assert.match(await home.text(), /Làng Thú Ngộ Nghĩnh/);
-    const img = await fetch(`http://127.0.0.1:${port}/hub.png`);
-    assert.strictEqual(img.headers.get('content-type'), 'image/png');
+    const data = await fetch(`http://127.0.0.1:${port}/game-data.js`);
+    assert.strictEqual(data.status, 200);
+    assert.match(await data.text(), /window\.GAME_DATA/);
     const bad = await fetch(`http://127.0.0.1:${port}/..%2fserver.js`);
     assert.notStrictEqual(bad.status, 200);
   } finally {

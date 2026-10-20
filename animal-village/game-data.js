@@ -1,4 +1,5 @@
 // Dữ liệu tĩnh của game: bản đồ, loài vật, quái, nhiệm vụ, lời thoại.
+// Dùng chung cho server (require) và trình duyệt (window.GAME_DATA, phục vụ ở /game-data.js).
 
 const WORLD = {
   width: 4200,
@@ -26,9 +27,9 @@ const SPECIES = {
     name: 'Chuột Béo Bụng Phệ',
     intro: 'Ăn khỏe, ngủ khỏe, huých bụng còn khỏe hơn!',
     skins: [
-      { name: 'Cam sữa', body: '#f0a04b', belly: '#fde6c4', accent: '#f4a3a8' },
-      { name: 'Trắng bông', body: '#f4efe8', belly: '#ffffff', accent: '#f7b6c2' },
-      { name: 'Xám khói', body: '#9a94a0', belly: '#e9e4ec', accent: '#f4a3a8' },
+      { name: 'Cam sữa', fx: 'sparkle', body: '#f0a04b', belly: '#fde6c4', accent: '#f4a3a8' },
+      { name: 'Trắng bông', fx: 'hearts', body: '#f4efe8', belly: '#ffffff', accent: '#f7b6c2' },
+      { name: 'Xám khói', fx: 'aura', body: '#9a94a0', belly: '#e9e4ec', accent: '#f4a3a8' },
     ],
     attacks: [
       { name: 'Huých Bụng', front: 70, back: 0, mul: 1.0, cd: 350, push: 20 },
@@ -40,9 +41,9 @@ const SPECIES = {
     name: 'Vịt Trẻ Trâu',
     intro: 'Đeo kính đen, cầm dao phay, đi đứng nghênh ngang.',
     skins: [
-      { name: 'Trắng ngầu', body: '#fbfbf7', belly: '#ffffff', accent: '#f39a1e' },
-      { name: 'Vàng nổi loạn', body: '#ffe066', belly: '#fff3b0', accent: '#f39a1e' },
-      { name: 'Đen bụi đời', body: '#4a4a55', belly: '#6b6b78', accent: '#f39a1e' },
+      { name: 'Trắng ngầu', fx: 'sparkle', body: '#fbfbf7', belly: '#ffffff', accent: '#f39a1e' },
+      { name: 'Vàng nổi loạn', fx: 'flame', body: '#ffe066', belly: '#fff3b0', accent: '#f39a1e' },
+      { name: 'Đen bụi đời', fx: 'smoke', body: '#4a4a55', belly: '#6b6b78', accent: '#f39a1e' },
     ],
     attacks: [
       { name: 'Chém Dao Phay', front: 85, back: 0, mul: 1.1, cd: 380 },
@@ -54,9 +55,9 @@ const SPECIES = {
     name: 'Thú Mỏ Vịt Hiền Lành',
     intro: 'Hiền khô, hay xin lỗi, nhưng quật đuôi thì đau lắm.',
     skins: [
-      { name: 'Nâu hạt dẻ', body: '#8a5a3a', belly: '#d9a46c', accent: '#f2a93b' },
-      { name: 'Socola sữa', body: '#6b4630', belly: '#c8956a', accent: '#f2a93b' },
-      { name: 'Xanh rêu', body: '#5f7f5a', belly: '#c9d9a8', accent: '#f2a93b' },
+      { name: 'Nâu hạt dẻ', fx: 'leaves', body: '#8a5a3a', belly: '#d9a46c', accent: '#f2a93b' },
+      { name: 'Socola sữa', fx: 'hearts', body: '#6b4630', belly: '#c8956a', accent: '#f2a93b' },
+      { name: 'Xanh rêu', fx: 'bubbles', body: '#5f7f5a', belly: '#c9d9a8', accent: '#f2a93b' },
     ],
     attacks: [
       { name: 'Đập Mỏ', front: 75, back: 0, mul: 1.0, cd: 350 },
@@ -68,9 +69,9 @@ const SPECIES = {
     name: 'Gà Con Cáu Kỉnh',
     intro: 'Nhỏ xíu mà nóng tính, động vào là xì khói.',
     skins: [
-      { name: 'Vàng chanh', body: '#ffe46b', belly: '#fff1a6', accent: '#f39a1e' },
-      { name: 'Cam cháy', body: '#ffb35c', belly: '#ffd8a3', accent: '#e8761a' },
-      { name: 'Hồng giận dỗi', body: '#ffb3c7', belly: '#ffd6e2', accent: '#f39a1e' },
+      { name: 'Vàng chanh', fx: 'sparkle', body: '#ffe46b', belly: '#fff1a6', accent: '#f39a1e' },
+      { name: 'Cam cháy', fx: 'flame', body: '#ffb35c', belly: '#ffd8a3', accent: '#e8761a' },
+      { name: 'Hồng giận dỗi', fx: 'hearts', body: '#ffb3c7', belly: '#ffd6e2', accent: '#f39a1e' },
     ],
     attacks: [
       { name: 'Mổ Liên Hoàn', front: 60, back: 0, mul: 0.6, cd: 180 },
@@ -82,9 +83,9 @@ const SPECIES = {
     name: 'Tiểu Thư Cá Sấu',
     intro: 'Đeo nơ hồng, nói chuyện nhỏ nhẹ, cắn thì không nhẹ chút nào.',
     skins: [
-      { name: 'Xanh lá nơ hồng', body: '#6fa35a', belly: '#efe6c4', accent: '#ff7aa8' },
-      { name: 'Ngọc bích vương miện', body: '#3fa38f', belly: '#e3f2df', accent: '#ffc93c' },
-      { name: 'Hồng tiểu thư', body: '#e58fb0', belly: '#fde3ec', accent: '#9b5de5' },
+      { name: 'Xanh lá nơ hồng', fx: 'petals', body: '#6fa35a', belly: '#efe6c4', accent: '#ff7aa8' },
+      { name: 'Ngọc bích vương miện', fx: 'aura', body: '#3fa38f', belly: '#e3f2df', accent: '#ffc93c' },
+      { name: 'Hồng tiểu thư', fx: 'hearts', body: '#e58fb0', belly: '#fde3ec', accent: '#9b5de5' },
     ],
     attacks: [
       { name: 'Cắn Một Phát', front: 80, back: 0, mul: 1.2, cd: 420 },
@@ -154,7 +155,7 @@ const LINES = {
     'Tiểu Thư Cá Sấu khóc nước mắt cá sấu vì... xem phim Hàn.',
   ],
   cries: ['Bá khí!', 'Thiệt là bá khí!', 'Đẳng cấp!', 'Haha!', 'Hihi!'],
-  vip: 'Chúc mừng con đã nhận được món quà VIP nhất của ta, hub này có thể dùng để xuất hình qua HDMI, USB, Type-C, mà đặc biệt có cổng thẻ nhớ giúp con cắm thẻ nhớ vào để lấy ảnh tiện hơn!',
+  vip: 'Chúc mừng con đã nhận được món quà VIP nhất của ta! Con là bạn thú giỏi nhất làng, ta tự hào về con lắm!',
   bye: ['Đi đường cẩn thận nha con!', 'Nhớ ăn uống đầy đủ đó!', 'Bye bye, nhớ ghé thăm ta nha~'],
   riverBye: ['Bọt bọt, đi đi con!', 'Nhớ quay lại thăm ta nha, ta ở dưới nước buồn lắm.'],
 };
@@ -163,7 +164,9 @@ function fill(text, vars = {}) {
   return text.replace(/\{(\w+)\}/g, (_, k) => (k in vars ? vars[k] : `{${k}}`));
 }
 
-module.exports = {
+const GAME_DATA = {
   WORLD, SPECIES, MONSTER_TYPES, MONSTER_SPAWNS, STAGES, FISH, LINES,
   ROSES_FOR_CHEST, FISH_FOR_KEY, fill,
 };
+if (typeof module !== 'undefined' && module.exports) module.exports = GAME_DATA;
+else window.GAME_DATA = GAME_DATA;

@@ -125,7 +125,7 @@ h1 { margin: 0; font-size: clamp(24px, 5vw, 36px); color: var(--pink-dark); }
 #giftReveal { position: relative; animation: appear .6s; }
 @keyframes appear { from { transform: scale(.3); opacity: 0; } }
 .vip-tag { display: inline-block; background: linear-gradient(90deg, #ffb703, #ff6f91); color: #fff; font-weight: 800; padding: 2px 16px; border-radius: 20px; }
-#giftImg { width: 100%; max-height: 240px; object-fit: contain; background: #fff; border-radius: 16px; margin: 10px 0 0; }
+#giftArt { width: 100%; height: auto; border-radius: 16px; margin: 10px 0 0; background: radial-gradient(circle at 50% 55%, #fff6c9, #ffe08a 60%, #ffb86b); }
 #giftName { margin: 4px 0; color: var(--pink-dark); }
 .quote { font-size: 15px; line-height: 1.45; background: #fff3d6; border-radius: 12px; padding: 8px 12px; text-align: left; }
 #confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
@@ -197,4 +197,20 @@ h1 { margin: 0; font-size: clamp(24px, 5vw, 36px); color: var(--pink-dark); }
   #skillbar { display: none; }
   #chat .emotes { display: none; }
   #chatLog { height: 48px; }
+}
+
+/* ---------- Trời & thời tiết ---------- */
+#env { position: absolute; left: 50%; top: 40px; transform: translateX(-50%); z-index: 4; display: grid; justify-items: center; gap: 6px; }
+#envToggle {
+  border: 2px solid var(--line); background: var(--panel); border-radius: 12px; padding: 0 12px; color: var(--ink); font-size: 13px; font-weight: 700;
+}
+#envMenu { background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 6px 8px; display: grid; gap: 4px; box-shadow: 0 3px 0 rgba(200, 120, 100, .25); }
+.env-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: 12px; font-weight: 700; }
+.env-row span { width: 64px; }
+.env-row button { border: 2px solid var(--line); background: #fff; border-radius: 10px; padding: 0 8px; font-size: 12px; color: var(--ink); }
+.env-row button.on { border-color: var(--pink); background: #fff1f4; }
+#envToggle:focus-visible, .env-row button:focus-visible, .skill:focus-visible, .species-card:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+@media (max-width: 700px) {
+  #env { top: auto; bottom: 360px; left: auto; right: 10px; transform: none; justify-items: end; }
+  .env-row span { width: 100%; }
 }

@@ -170,9 +170,9 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
           r.chest = 0; r.key = 0; r.stage = 5; r.giftsOpened++;
           addExp(s, 50);
           sendProgress(s);
-          send(s, { t: 'gift', name: 'Hub Type-C cho MacBook', image: 'hub.png', text: D.LINES.vip });
+          send(s, { t: 'gift', name: 'Quà VIP bí mật', text: D.LINES.vip });
           npcSay('chief', D.LINES.vip, s);
-          system(`🎉 ${r.name} vừa mở rương báu và nhận được QUÀ VIP: Hub Type-C cho MacBook!`);
+          system(`🎉 ${r.name} vừa mở rương báu và nhận được QUÀ VIP!`);
           return;
         }
         break;
@@ -197,7 +197,7 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
     const r = s.rec;
     const options = [];
     let def;
-    if (r.stage < 2) def = 'Ùm ùm... ta là Thần Sông. Giờ chưa có việc gì đâu, nhưng con cứ đứng ở bến nhấn C để câu cá chơi nha!';
+    if (r.stage < 2) def = 'Ùm ùm... ta là Thần Sông, hà mã già nhất dòng sông này. Giờ chưa có việc gì đâu, khi nào cần ta thì quay lại nha!';
     else if (r.stage === 2) {
       def = `Chìa khóa vàng hả? Ta có thấy dưới đáy sông... Nhưng ta đói quá, bọt bọt. Câu cho ta ${F} con cá, ta sẽ lặn xuống mò cho con!`;
       options.push({ id: 'accept', label: `Con sẽ câu ${F} con cá cho ngài!` });
@@ -253,6 +253,7 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
   }
   function cast(s) {
     if (s.fishing) return;
+    if (s.rec.stage !== 3) return send(s, { t: 'fish', state: 'cancel', text: s.rec.stage < 3 ? 'Chưa có nhiệm vụ câu cá! Gặp Thần Sông nhận nhiệm vụ trước đã nha.' : 'Thần Sông no rồi, không cần câu thêm đâu!' });
     if (!(s.x <= D.WORLD.dock.x2 + 20 && Math.abs(s.y - D.WORLD.groundY) < 5)) return send(s, { t: 'fish', state: 'cancel', text: 'Ra đứng trên bến gỗ ở bờ sông mới câu được nha!' });
     const f = { state: 'wait', x: s.x };
     s.fishing = f;
@@ -401,8 +402,12 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
     let urlPath;
     try { urlPath = decodeURIComponent((req.url || '/').split('?')[0]); } catch { res.writeHead(400); return res.end(); }
     const pub = path.join(__dirname, 'public');
-    const file = path.normalize(path.join(pub, urlPath === '/' ? 'index.html' : urlPath));
-    if (file !== pub && !file.startsWith(pub + path.sep)) { res.writeHead(403); return res.end(); }
+    let file;
+    if (urlPath === '/game-data.js') file = path.join(__dirname, 'game-data.js'); // dữ liệu dùng chung với trình duyệt
+    else {
+      file = path.normalize(path.join(pub, urlPath === '/' ? 'index.html' : urlPath));
+      if (file !== pub && !file.startsWith(pub + path.sep)) { res.writeHead(403); return res.end(); }
+    }
     fs.readFile(file, (err, buf) => {
       if (err) { res.writeHead(404); return res.end('Not found'); }
       res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
