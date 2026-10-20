@@ -1,0 +1,269 @@
+// Kiểm thử toàn bộ hành trình với 2 người chơi qua WebSocket thật.
+const test = require('node:test');
+const assert = require('node:assert');
+const os = require('os');
+const path = require('path');
+const fs = require('fs');
+const WebSocket = require('ws');
+const { createGame } = require('../server');
+const D = require('../game-data');
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const G = D.WORLD.groundY;
+
+class Client {
+  constructor(port) {
+    this.ws = new WebSocket(`ws://127.0.0.1:${port}/ws`);
+    this.msgs = [];
+    this.waiters = [];
+    this.monsters = new Map();
+    this.drops = new Map();
+    this.ws.on('message', (d) => {
+      const m = JSON.parse(d);
+      if (m.t === 'snap') for (const [id, x, , hp, dead] of m.m) this.monsters.set(id, { ...this.monsters.get(id), id, x, hp, dead });
+      if (m.t === 'welcome') { this.id = m.id; for (const mo of m.monsters) this.monsters.set(mo.id, mo); }
+      if (m.t === 'drop') this.drops.set(m.d.id, m.d);
+      if (m.t === 'dropGone') this.drops.delete(m.id);
+      if (m.t === 'progress') this.progress = m.p;
+      this.msgs.push(m);
+      this.waiters = this.waiters.filter((w) => !(w.pred(m) && (w.resolve(m), true)));
+    });
+  }
+  open() { return new Promise((r) => this.ws.on('open', r)); }
+  send(m) { this.ws.send(JSON.stringify(m)); }
+  wait(pred, ms = 3000) {
+    const found = this.msgs.find(pred);
+    if (found) { this.msgs.splice(this.msgs.indexOf(found), 1); return Promise.resolve(found); }
+    return new Promise((resolve, reject) => {
+      const w = { pred, resolve: (m) => { clearTimeout(timer); this.msgs.splice(this.msgs.indexOf(m), 1); resolve(m); } };
+      const timer = setTimeout(() => reject(new Error('Hết thời gian chờ tin nhắn')), ms);
+      this.waiters.push(w);
+    });
+  }
+  clear(t) { this.msgs = this.msgs.filter((m) => m.t !== t); }
+  moveTo(x, y = G, dir = 1) { this.send({ t: 'state', x, y, dir, anim: 'idle', hp: 100 }); }
+  async npc(npc, action) {
+    this.clear('dialog');
+    this.moveTo(npc === 'river' ? D.WORLD.dock.x1 + 80 : D.WORLD.chiefX);
+    await sleep(20);
+    this.send({ t: 'npc', npc, action });
+    if (action !== 'bye') return this.wait((m) => m.t === 'dialog');
+  }
+  // Đánh cho tới khi giết được 1 con quái loại `type`
+  async killOne(type, k = 0) {
+    for (let tries = 0; tries < 80; tries++) {
+      const ids = D.MONSTER_SPAWNS.map(([t], i) => (t === type ? i + 1 : 0)).filter(Boolean);
+      const target = ids.map((id) => this.monsters.get(id)).find((m) => m && !m.dead);
+      if (!target) { await sleep(200); continue; }
+      this.moveTo(target.x - 30, G, 1);
+      await sleep(20);
+      this.send({ t: 'attack', k });
+      try {
+        await this.wait((m) => m.t === 'mdie' && m.m === target.id && m.by === this.id, 450);
+        await sleep(30);
+        return target;
+      } catch { /* chưa chết, đánh tiếp */ }
+    }
+    throw new Error('Không giết được ' + type);
+  }
+  async pickAll() {
+    for (const d of [...this.drops.values()]) {
+      if (d.owner !== this.id) continue;
+      this.moveTo(d.x); await sleep(15);
+      this.send({ t: 'pickup', id: d.id });
+      await this.wait((m) => m.t === 'dropGone' && m.id === d.id);
+    }
+    await sleep(30);
+  }
+}
+
+test('hành trình đầy đủ: hoa hồng → rương → Thần Sông → câu cá → chìa khóa → quà VIP', { timeout: 120000 }, async () => {
+  const dataFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'tv-')), 'players.json');
+  // random cố định: quái luôn rơi hoa hồng, luôn chí mạng, câu được cá xịn đầu bảng
+  const game = createGame({ dataFile, port: 0, host: '127.0.0.1', random: () => 0.01, timing: { biteMin: 30, biteMax: 30, biteWindow: 300 } });
+  const port = await new Promise((r) => game.listen(r));
+  const a = new Client(port), b = new Client(port);
+  await Promise.all([a.open(), b.open()]);
+  try {
+    a.send({ t: 'join', token: 'tokenAAAA1', name: 'Sấu Hồng', species: 'croc', skin: 2 });
+    await a.wait((m) => m.t === 'welcome');
+    b.send({ t: 'join', token: 'tokenBBBB2', name: 'Vịt Bụi', species: 'khunglong', skin: 99 });
+    const wb = await b.wait((m) => m.t === 'welcome');
+    assert.strictEqual(wb.players.length, 2, 'B thấy cả A');
+    assert.ok(wb.species.croc.attacks.length === 2, 'client nhận danh sách loài');
+    const infoB = await a.wait((m) => m.t === 'pinfo' && m.p.name === 'Vịt Bụi');
+    assert.strictEqual(infoB.p.species, 'hamster', 'loài không hợp lệ dùng mặc định');
+    assert.strictEqual(infoB.p.skin, 2, 'skin bị kẹp về hợp lệ');
+    assert.strictEqual(wb.players.find((p) => p.name === 'Sấu Hồng').species, 'croc');
+
+    const greet = await a.wait((m) => m.t === 'bubble' && m.who === 'chief');
+    assert.match(greet.text, /Sấu Hồng/);
+
+    // Chat giữa hai người chơi
+    a.send({ t: 'chat', text: 'Chào Vịt Bụi nha!' });
+    const chat = await b.wait((m) => m.t === 'chat' && m.kind === 'player');
+    assert.strictEqual(chat.name, 'Sấu Hồng');
+
+    // Bước 1: nhận nhiệm vụ săn hoa hồng
+    let dlg = await a.npc('chief', 'talk');
+    assert.match(dlg.text, /10 bông hoa hồng/);
+    await a.npc('chief', 'accept');
+    assert.strictEqual(a.progress.stage, 1);
+
+    // Chưa đủ hoa thì chưa có nút đổi rương
+    dlg = await a.npc('chief', 'talk');
+    assert.ok(!dlg.options.some((o) => o.id === 'chest'));
+
+    // Đánh quái bằng cả 2 chiêu, hoa hồng rơi xuống đất, người khác không nhặt được ngay
+    await a.killOne('snail', 1); // quật đuôi
+    assert.ok(a.drops.size >= 1, 'quái rơi hoa hồng');
+    const firstDrop = [...a.drops.values()][0];
+    b.moveTo(firstDrop.x); await sleep(20);
+    b.send({ t: 'pickup', id: firstDrop.id }); await sleep(60);
+    assert.ok(a.drops.has(firstDrop.id), 'hoa của A, B không nhặt được');
+    b.moveTo(D.WORLD.spawnX);
+    // Ở xa thì không nhặt được
+    a.moveTo(firstDrop.x + 400); await sleep(20);
+    a.send({ t: 'pickup', id: firstDrop.id }); await sleep(60);
+    assert.ok(a.drops.has(firstDrop.id), 'ở xa không nhặt được');
+    const dropped = a.drops.size;
+    await a.pickAll();
+    assert.strictEqual(a.progress.roses, dropped, 'nhặt hết hoa đã rơi vào hành trang');
+    while (a.progress.roses < D.ROSES_FOR_CHEST) {
+      await a.killOne(a.progress.roses % 2 ? 'mushroom' : 'snail');
+      await a.pickAll();
+    }
+
+    // Đổi 10 hoa hồng lấy rương báu -> bước 2
+    dlg = await a.npc('chief', 'talk');
+    assert.ok(dlg.options.some((o) => o.id === 'chest'));
+    const roses = a.progress.roses;
+    dlg = await a.npc('chief', 'chest');
+    assert.match(dlg.text, /lòng sông/);
+    assert.strictEqual(a.progress.chest, 1);
+    assert.strictEqual(a.progress.roses, roses - D.ROSES_FOR_CHEST);
+    assert.strictEqual(a.progress.stage, 2);
+
+    // Thần Sông chỉ nói chuyện được khi ở bờ sông
+    a.moveTo(D.WORLD.chiefX); await sleep(20);
+    a.clear('toast');
+    a.send({ t: 'npc', npc: 'river', action: 'talk' });
+    assert.match((await a.wait((m) => m.t === 'toast')).text, /bờ sông/);
+    dlg = await a.npc('river', 'talk');
+    assert.ok(dlg.options.some((o) => o.id === 'accept'));
+    await a.npc('river', 'accept');
+    assert.strictEqual(a.progress.stage, 3);
+
+    // Câu cá: không ở bến thì không câu được
+    a.moveTo(D.WORLD.chiefX); await sleep(20);
+    a.clear('fish');
+    a.send({ t: 'cast' });
+    assert.strictEqual((await a.wait((m) => m.t === 'fish')).state, 'cancel');
+    // Giật sớm thì cá chạy
+    a.moveTo(D.WORLD.dock.x1 + 80, G, -1); await sleep(20);
+    a.send({ t: 'cast' }); await a.wait((m) => m.t === 'fish' && m.state === 'wait');
+    a.send({ t: 'reel' });
+    assert.strictEqual((await a.wait((m) => m.t === 'fish' && m.state !== 'wait')).state, 'early');
+    // Không giật thì cá ăn mồi rồi chạy
+    a.send({ t: 'cast' }); await a.wait((m) => m.t === 'fish' && m.state === 'bite');
+    assert.strictEqual((await a.wait((m) => m.t === 'fish' && m.state === 'escape', 1000)).state, 'escape');
+    // Câu đủ 10 con
+    while (a.progress.fish < D.FISH_FOR_KEY) {
+      a.send({ t: 'cast' });
+      await a.wait((m) => m.t === 'fish' && m.state === 'bite');
+      a.send({ t: 'reel' });
+      const c = await a.wait((m) => m.t === 'fish' && m.state === 'caught');
+      assert.strictEqual(c.name, 'Cá Rô Mập');
+      await a.wait((m) => m.t === 'progress');
+    }
+
+    // Cống nạp cá -> nhận chìa khóa -> bước 4
+    dlg = await a.npc('river', 'talk');
+    assert.ok(dlg.options.some((o) => o.id === 'offer'));
+    await a.npc('river', 'offer');
+    assert.strictEqual(a.progress.key, 1);
+    assert.strictEqual(a.progress.fish, 0);
+    assert.strictEqual(a.progress.stage, 4);
+
+    // B chưa có rương thì không mở được
+    await b.npc('chief', 'open');
+    assert.strictEqual(b.progress.giftsOpened, 0);
+
+    // Về làng, Trưởng làng mở rương -> quà VIP
+    dlg = await a.npc('chief', 'talk');
+    assert.ok(dlg.options.some((o) => o.id === 'open'));
+    a.clear('gift');
+    a.send({ t: 'npc', npc: 'chief', action: 'open' });
+    const gift = await a.wait((m) => m.t === 'gift');
+    assert.strictEqual(gift.image, 'hub.png');
+    assert.match(gift.text, /HDMI, USB, Type-C/);
+    assert.match(gift.text, /cổng thẻ nhớ/);
+    const ann = await b.wait((m) => m.t === 'chat' && m.kind === 'system' && /QUÀ VIP/.test(m.text));
+    assert.match(ann.text, /Sấu Hồng/);
+    await sleep(50);
+    assert.deepStrictEqual([a.progress.chest, a.progress.key, a.progress.stage, a.progress.giftsOpened], [0, 0, 5, 1]);
+
+    // Đi lại hành trình
+    await a.npc('chief', 'restart');
+    assert.strictEqual(a.progress.stage, 1);
+
+    // Câu nói "bá khí" hoặc câu riêng của loài khi đánh
+    await b.killOne('snail');
+    const cry = await a.wait((m) => m.t === 'bubble' && m.who === b.id);
+    assert.ok([...D.LINES.cries, ...D.SPECIES.hamster.cries].includes(cry.text));
+
+    // Cùng token đang online thì bị từ chối
+    const c = new Client(port); await c.open();
+    c.send({ t: 'join', token: 'tokenAAAA1', name: 'Fake' });
+    await c.wait((m) => m.t === 'inuse');
+    c.ws.close();
+
+    b.ws.close();
+    await a.wait((m) => m.t === 'leave' && m.id === b.id);
+  } finally {
+    a.ws.close();
+    await new Promise((r) => game.close(r));
+  }
+  await sleep(700);
+  const saved = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+  assert.strictEqual(saved.tokenAAAA1.giftsOpened, 1);
+  assert.strictEqual(saved.tokenAAAA1.species, 'croc');
+});
+
+test('tầm đánh theo loài: quật đuôi trúng quái phía sau, cắn thì không', async () => {
+  const game = createGame({ dataFile: path.join(os.tmpdir(), 'tv-unused2.json'), port: 0, host: '127.0.0.1', random: () => 0.99 });
+  const port = await new Promise((r) => game.listen(r));
+  const a = new Client(port); await a.open();
+  try {
+    a.send({ t: 'join', token: 'tokenCROC01', name: 'Sấu', species: 'croc' });
+    await a.wait((m) => m.t === 'welcome');
+    const snail = game.monsters.find((m) => m.type === 'snail');
+    for (const m of game.monsters) if (m !== snail) m.dead = true, m.respawnAt = Infinity;
+    snail.x = 2000; snail.minX = 1990; snail.maxX = 2010;
+    // quái ở phía sau 70px (người chơi quay mặt sang phải)
+    a.moveTo(2070, G, 1); await sleep(30);
+    a.send({ t: 'attack', k: 0 });
+    await assert.rejects(a.wait((m) => m.t === 'hit', 300));
+    a.send({ t: 'attack', k: 1 });
+    await a.wait((m) => m.t === 'hit' && m.m === snail.id);
+  } finally {
+    a.ws.close();
+    await new Promise((r) => game.close(r));
+  }
+});
+
+test('phục vụ file tĩnh và chặn path traversal', async () => {
+  const game = createGame({ dataFile: path.join(os.tmpdir(), 'tv-unused.json'), port: 0, host: '127.0.0.1' });
+  const port = await new Promise((r) => game.listen(r));
+  try {
+    const home = await fetch(`http://127.0.0.1:${port}/`);
+    assert.strictEqual(home.status, 200);
+    assert.match(await home.text(), /Làng Thú Ngộ Nghĩnh/);
+    const img = await fetch(`http://127.0.0.1:${port}/hub.png`);
+    assert.strictEqual(img.headers.get('content-type'), 'image/png');
+    const bad = await fetch(`http://127.0.0.1:${port}/..%2fserver.js`);
+    assert.notStrictEqual(bad.status, 200);
+  } finally {
+    await new Promise((r) => game.close(r));
+  }
+});

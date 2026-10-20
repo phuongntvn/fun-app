@@ -3,39 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Làng Ninja Hoa Hồng</title>
+  <title>Làng Thú Ngộ Nghĩnh</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Màn hình tạo nhân vật -->
+  <!-- Màn hình chọn nhân vật -->
   <section id="create" class="screen">
     <div class="create-card">
-      <h1>🥷 Làng Ninja Hoa Hồng 🌹</h1>
-      <p class="sub">Tạo một ninja thật đáng yêu rồi vào làng gặp Trưởng làng nhé!</p>
+      <h1>🐹 Làng Thú Ngộ Nghĩnh 🌹</h1>
+      <p class="sub">Chọn một bạn thú để nhập vai, rồi vào làng gặp Trưởng làng nhé!</p>
+      <div id="speciesList" class="species-grid"></div>
       <div class="create-body">
         <div class="preview-wrap">
-          <canvas id="preview" width="220" height="240"></canvas>
-          <button type="button" id="randomLook" class="ghost">🎲 Ngẫu nhiên</button>
+          <canvas id="preview" width="220" height="230"></canvas>
         </div>
         <div class="options">
+          <div class="species-head"><b id="speciesName"></b><span id="speciesIntro"></span></div>
+          <div class="skills" id="speciesSkills"></div>
+          <div class="row"><span>Skin</span><div id="skinList" class="skin-list"></div></div>
           <label class="field">Tên nhân vật
-            <input id="nameInput" maxlength="16" placeholder="VD: Bé Na Ninja" autocomplete="off">
+            <input id="nameInput" maxlength="16" placeholder="VD: Bé Sấu Hồng" autocomplete="off">
           </label>
-          <div class="row"><span>Kiểu tóc</span>
-            <div class="stepper"><button type="button" data-step="hair" data-d="-1">◀</button><b id="hairLabel"></b><button type="button" data-step="hair" data-d="1">▶</button></div>
-          </div>
-          <div class="row"><span>Màu tóc</span><div class="swatches" data-key="hairColor"></div></div>
-          <div class="row"><span>Trang phục</span>
-            <div class="stepper"><button type="button" data-step="outfit" data-d="-1">◀</button><b id="outfitLabel"></b><button type="button" data-step="outfit" data-d="1">▶</button></div>
-          </div>
-          <div class="row"><span>Màu áo</span><div class="swatches" data-key="outfitColor"></div></div>
-          <div class="row"><span>Băng đô</span><div class="swatches" data-key="bandColor"></div></div>
-          <div class="row"><span>Màu da</span><div class="swatches" data-key="skin"></div></div>
         </div>
       </div>
-      <button type="button" id="startBtn" class="primary">Vào làng thôi! 🏯</button>
+      <button type="button" id="startBtn" class="primary">Vào làng thôi! 🏡</button>
       <p class="hint" id="createHint">Mở cùng địa chỉ này trên máy khác để chơi cùng bạn bè.</p>
     </div>
   </section>
@@ -54,11 +47,17 @@
     </div>
 
     <div id="bag">
-      <div class="bag-item" title="Bông hoa hồng (đánh quái để nhặt)">🌹 <b id="roses">0</b><small id="rosesNeed"></small></div>
-      <div class="bag-item" title="Bó hoa hồng (làm nhiệm vụ hoặc đổi hoa hồng)">💐 <b id="bouquets">0</b><small id="bouquetsNeed"></small></div>
-      <div class="bag-item" title="Rương báu">🎁 <b id="chests">0</b></div>
-      <button type="button" id="openChestBtn" class="primary small hidden">Mở rương!</button>
+      <div class="bag-title">🎒 Hành trang</div>
+      <div class="bag-item" title="Hoa hồng đỏ (đánh quái rơi ra)">🌹 <b id="roses">0</b><small id="rosesNeed"></small></div>
+      <div class="bag-item" title="Cá (câu ở bến sông)">🐟 <b id="fish">0</b><small id="fishNeed"></small></div>
+      <div class="bag-item" title="Rương báu">🎁 <b id="chest">0</b> <span class="sep">·</span> 🗝️ <b id="key">0</b></div>
       <div id="online" class="online"></div>
+    </div>
+
+    <div id="skillbar">
+      <button type="button" class="skill" id="skill0"><kbd>J</kbd><span></span><i></i></button>
+      <button type="button" class="skill" id="skill1"><kbd>K</kbd><span></span><i></i></button>
+      <button type="button" class="skill fishbtn hidden" id="fishBtn"><kbd>C</kbd><span>🎣 Câu cá</span></button>
     </div>
 
     <div id="chat">
@@ -68,7 +67,7 @@
         <button type="button" data-emote="Hihi 😆">😆</button>
         <button type="button" data-emote="Thương quá ❤️">❤️</button>
         <button type="button" data-emote="Thiệt là bá khí! 💪">💪</button>
-        <button type="button" data-emote="Đi đánh quái chung không? ⚔️">⚔️</button>
+        <button type="button" data-emote="Đi câu cá chung không? 🎣">🎣</button>
       </div>
       <form id="chatForm" autocomplete="off">
         <input id="chatInput" maxlength="120" placeholder="Nhấn Enter để chat...">
@@ -77,7 +76,7 @@
     </div>
 
     <div id="help" class="help">
-      <b>←→ / A D</b> di chuyển · <b>↑ / W / Space</b> nhảy (2 lần) · <b>J / Z</b> đánh · <b>E</b> nói chuyện · <b>↓</b> xuống bục · <b>Enter</b> chat
+      <b>←→ / A D</b> di chuyển · <b>↑ / W / Space</b> nhảy (2 lần) · <b>J</b> đánh · <b>K</b> tuyệt chiêu · <b>E</b> nói chuyện · <b>C</b> câu cá · <b>↓</b> xuống bục · <b>Enter</b> chat
     </div>
 
     <div id="touch" class="hidden">
@@ -86,16 +85,18 @@
         <button type="button" data-key="right">▶</button>
       </div>
       <div class="pad-right">
-        <button type="button" data-key="talk" class="talk">💬</button>
         <button type="button" data-key="jump">⤒</button>
+        <button type="button" data-key="skill" class="sk">✨</button>
         <button type="button" data-key="attack" class="atk">⚔</button>
+        <button type="button" data-key="fish" class="talk">🎣</button>
+        <button type="button" data-key="talk" class="talk">💬</button>
       </div>
     </div>
 
     <div id="dialog" class="hidden">
-      <canvas id="chiefPortrait" width="110" height="120"></canvas>
+      <canvas id="npcPortrait" width="110" height="120"></canvas>
       <div class="dialog-body">
-        <div class="dialog-name">👴 Trưởng làng</div>
+        <div class="dialog-name" id="dialogName">🐢 Trưởng làng</div>
         <p id="dialogText"></p>
         <div id="dialogOptions"></div>
       </div>
@@ -110,7 +111,7 @@
           <div class="vip-tag">✨ QUÀ VIP ✨</div>
           <img id="giftImg" src="hub.png" alt="Hub Type-C cho MacBook">
           <h2 id="giftName"></h2>
-          <p class="quote"><b>👴 Trưởng làng:</b> “<span id="giftText"></span>”</p>
+          <p class="quote"><b>🐢 Trưởng làng:</b> “<span id="giftText"></span>”</p>
           <button type="button" id="giftClose" class="primary">Cảm ơn ông! 🥰</button>
         </div>
       </div>

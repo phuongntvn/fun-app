@@ -1,3 +1,3 @@
 # fun-app
 
-- [`ninja-village/`](ninja-village/) — Làng Ninja Hoa Hồng: game web nhiều người chơi kiểu Ninja School.
+- [`animal-village/`](animal-village/) — Làng Thú Ngộ Nghĩnh: game web nhiều người chơi kiểu Ninja School, nhập vai các bạn thú.
