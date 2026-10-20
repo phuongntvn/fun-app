@@ -270,3 +270,4 @@ h1 { margin: 0; font-size: clamp(24px, 5vw, 36px); color: var(--pink-dark); }
 #muteBtn:focus-visible, #sndVolume:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
 .env-row .vol { display: flex; align-items: center; gap: 4px; }
 #sndVolume { width: 90px; accent-color: var(--pink); }
+.voice-hint { margin: 0; max-width: 360px; font-size: 11px; line-height: 1.35; color: var(--pink-dark); }

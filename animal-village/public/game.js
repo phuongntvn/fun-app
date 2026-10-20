@@ -847,6 +847,31 @@
   function say(who, text) {
     const dur = Math.min(12000, 2500 + text.length * 55);
     bubbles.set(who, { text, until: performance.now() + dur });
+    speakAs(who, text);
+  }
+
+  // Giọng của từng nhân vật: pitch/rate cho giọng đọc tiếng Việt, base/wave cho tiếng ríu rít
+  const VOICES = {
+    chief: { pitch: 0.6, rate: 0.85, male: true, base: 150, wave: 'triangle' },
+    river: { pitch: 0.3, rate: 0.8, male: true, base: 95, wave: 'sine' },
+    sensei: { pitch: 0.75, rate: 0.95, male: true, base: 130, wave: 'square' },
+    hamster: { pitch: 1.5, rate: 1.1, male: false, base: 520, wave: 'triangle' },
+    duck: { pitch: 1.0, rate: 1.2, male: true, base: 300, wave: 'sawtooth' },
+    platypus: { pitch: 1.15, rate: 0.9, male: true, base: 340, wave: 'sine' },
+    chick: { pitch: 2.0, rate: 1.3, male: false, base: 820, wave: 'square' },
+    croc: { pitch: 1.3, rate: 0.95, male: false, base: 440, wave: 'triangle' },
+  };
+  // đọc câu nói theo giọng người nói; ở xa quá (hơn 900px) thì không nghe thấy
+  function speakAs(who, text, { urgent = false } = {}) {
+    if (!window.Sound || !WORLD) return;
+    let voice, x;
+    if (who === 'chief') { voice = VOICES.chief; x = WORLD.chiefX; }
+    else if (who === 'river') { voice = VOICES.river; x = WORLD.riverGodX; }
+    else if (typeof who === 'string') { const n = senseis.get(who); voice = VOICES.sensei; x = n ? n.rx : me.x; }
+    else if (who === myId) { voice = VOICES[mySpecies]; x = me.x; }
+    else { const p = players.get(who); if (!p) return; voice = VOICES[p.info.species]; x = p.rx; }
+    const vol = urgent ? 1 : Math.max(0, 1 - Math.abs(x - me.x) / 900);
+    Sound.speak(text, voice || VOICES.hamster, { vol, urgent });
   }
 
   function addChat(m) {
@@ -896,6 +921,7 @@
   const portrait = $('npcPortrait').getContext('2d');
   function showDialog(npc, text, options) {
     if (!dialogOpen) sfx('dialog');
+    speakAs(npc, text, { urgent: true });
     dialogOpen = true; dialogOptions = options; dialogNpc = npc;
     $('dialog').classList.remove('hidden');
     $('dialogName').textContent = npc === 'river' ? '🌊 Thần Sông' : '🐢 Trưởng làng';
@@ -914,7 +940,11 @@
     else { portrait.scale(1.1, 1.1); drawChief(portrait, 38, 100, 0, null); }
     portrait.restore();
   }
-  function hideDialog() { dialogOpen = false; $('dialog').classList.add('hidden'); }
+  // stopVoice: ngừng đọc khi người chơi bỏ đi giữa chừng; khi NPC tự đóng hội thoại thì để câu chào tạm biệt đọc nốt
+  function hideDialog(stopVoice = false) {
+    if (stopVoice && dialogOpen && window.Sound) Sound.stopSpeech();
+    dialogOpen = false; $('dialog').classList.add('hidden');
+  }
   $('dialogClose').onclick = () => send({ t: 'npc', npc: dialogNpc, action: 'bye' });
 
   // ---------- Quà VIP ----------
@@ -1453,7 +1483,7 @@
       else toast('Lại gần Trưởng làng (cụ rùa đội nón) hoặc Thần Sông để nói chuyện nha!');
     }
     talkQueued = false;
-    if (dialogOpen && !(dialogNpc === 'river' ? nearRiver() : Math.abs(me.x - WORLD.chiefX) < 230)) hideDialog();
+    if (dialogOpen && !(dialogNpc === 'river' ? nearRiver() : Math.abs(me.x - WORLD.chiefX) < 230)) hideDialog(true);
 
     if (now - lastSend > 66) sendState(now);
   }
@@ -1515,17 +1545,32 @@
     $('sndMusic').classList.toggle('on', st.music);
     $('sndSfx').classList.toggle('on', st.sfx);
     $('sndVolume').value = Math.round(st.volume * 100);
-    const muted = !st.music && !st.sfx;
+    const vi = window.Sound && Sound.hasVietnamese();
+    $('sndVoice').textContent = { auto: vi ? '🗣️ Giọng: Tiếng Việt' : '🗣️ Giọng: Tự động', babble: '🐾 Giọng: Ríu rít', off: '🤐 Giọng: Tắt' }[st.voice] || '🗣️ Giọng: Tự động';
+    $('sndVoice').classList.toggle('on', st.voice !== 'off');
+    $('voiceHint').classList.toggle('hidden', !(st.voice === 'auto' && !vi));
+    const muted = !st.music && !st.sfx && st.voice === 'off';
     $('muteBtn').textContent = muted ? '🔇' : '🔊';
     $('muteBtn').setAttribute('aria-label', muted ? 'Bật âm thanh' : 'Tắt âm thanh');
   }
   $('sndMusic').onclick = () => { Sound.unlock(); Sound.set('music', !Sound.settings.music); refreshSoundUI(); };
   $('sndSfx').onclick = () => { Sound.unlock(); Sound.set('sfx', !Sound.settings.sfx); refreshSoundUI(); sfx('click'); };
   $('sndVolume').oninput = (e) => { Sound.set('volume', e.target.value / 100); };
+  $('sndVoice').onclick = () => {
+    Sound.unlock();
+    const order = ['auto', 'babble', 'off'];
+    Sound.set('voice', order[(order.indexOf(Sound.settings.voice) + 1) % order.length]);
+    refreshSoundUI();
+    speakAs(myId, 'Xin chào, giọng của tui nè!', { urgent: true });
+  };
+  // danh sách giọng của trình duyệt có thể tải chậm, cập nhật lại nhãn khi có
+  if (window.speechSynthesis) window.speechSynthesis.addEventListener?.('voiceschanged', () => refreshSoundUI());
   $('muteBtn').onclick = () => {
     Sound.unlock();
-    const on = !(Sound.settings.music || Sound.settings.sfx);
-    Sound.set('music', on); Sound.set('sfx', on); refreshSoundUI();
+    const on = !(Sound.settings.music || Sound.settings.sfx || Sound.settings.voice !== 'off');
+    Sound.set('music', on); Sound.set('sfx', on); Sound.set('voice', on ? 'auto' : 'off');
+    if (!on) Sound.stopSpeech();
+    refreshSoundUI();
   };
   refreshSoundUI();
 

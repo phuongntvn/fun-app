@@ -7,7 +7,8 @@
     get(k, d) { try { const v = JSON.parse(localStorage.getItem('tv_snd_' + k)); return v == null ? d : v; } catch { return d; } },
     set(k, v) { try { localStorage.setItem('tv_snd_' + k, JSON.stringify(v)); } catch { /* bỏ qua */ } },
   };
-  const settings = { music: store.get('music', true), sfx: store.get('sfx', true), volume: store.get('volume', 0.7) };
+  // voice: 'auto' (giọng Việt nếu máy có, không thì ríu rít) | 'babble' (luôn ríu rít) | 'off'
+  const settings = { music: store.get('music', true), sfx: store.get('sfx', true), voice: store.get('voice', 'auto'), volume: store.get('volume', 0.7) };
 
   let ac = null, master = null, musicBus = null, sfxBus = null, noiseBuf = null;
   let rainNode = null, rainGain = null;
@@ -185,5 +186,68 @@
     rainGain.gain.setTargetAtTime(k * 0.12, ac.currentTime, 0.3);
   }
 
-  window.Sound = { unlock, play, set, setMood, setRain, settings };
+  // ---------- Giọng nói nhân vật ----------
+  // Ưu tiên giọng tiếng Việt có sẵn trên máy (Microsoft Edge có giọng HoaiMy/NamMinh rất tự nhiên).
+  // Máy không có giọng Việt thì nói "ríu rít" kiểu thú bằng các nốt ngắn, mỗi nhân vật một cao độ.
+  const synth = window.speechSynthesis || null;
+  let viVoices = [];
+  function loadVoices() {
+    const score = (v) => (/natural|online/i.test(v.name) ? 2 : 0) + (/google|microsoft/i.test(v.name) ? 1 : 0);
+    viVoices = synth.getVoices().filter((v) => /^vi/i.test(v.lang)).sort((a, b) => score(b) - score(a));
+  }
+  if (synth) { loadVoices(); synth.addEventListener?.('voiceschanged', loadVoices); }
+  function pickVoice(male) {
+    // tên giọng có chữ "Vietnamese" nên phải so khớp đúng tên người đọc (NamMinh là nam; HoaiMy, An là nữ)
+    return viVoices.find((v) => (male ? /namminh|\bmale\b/i : /hoaimy|female|\ban\b/i).test(v.name)) || viVoices[0];
+  }
+  const hasVietnamese = () => viVoices.length > 0;
+  // bỏ emoji để giọng đọc không đọc tên biểu tượng
+  const clean = (text) => text.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, '').replace(/\s+/g, ' ').trim();
+
+  let lastSpoken = '', lastAt = 0, babbleUntil = 0;
+  // profile: { pitch, rate, male, base (Hz của tiếng ríu rít), wave }
+  // urgent: câu hội thoại chính thì ngắt câu đang đọc; câu hô khi đánh thì bỏ qua nếu đang bận đọc
+  function speak(text, profile, { vol = 1, urgent = false } = {}) {
+    if (settings.voice === 'off' || vol <= 0.05) return;
+    text = clean(text);
+    if (!text) return;
+    const now = Date.now();
+    if (text === lastSpoken && now - lastAt < 4000) return;
+    lastSpoken = text; lastAt = now;
+    if (settings.voice === 'auto' && synth && hasVietnamese()) {
+      if (urgent) synth.cancel();
+      else if (synth.pending) return; // đã có một câu chờ rồi thì thôi, tránh dồn hàng
+      const u = new SpeechSynthesisUtterance(text.slice(0, 240));
+      u.voice = pickVoice(profile.male); u.lang = u.voice.lang;
+      u.pitch = profile.pitch; u.rate = profile.rate;
+      u.volume = Math.min(1, vol * settings.volume * 1.4);
+      synth.speak(u);
+      return;
+    }
+    babble(text, profile, vol);
+  }
+  function stopSpeech() { if (synth) synth.cancel(); }
+
+  function babble(text, p, vol) {
+    if (!ac) return;
+    const t0 = Math.max(ac.currentTime + 0.02, babbleUntil);
+    if (t0 - ac.currentTime > 1.2) return; // đang ríu rít dồn quá thì bỏ qua câu này
+    const syl = Math.min(14, Math.max(2, Math.round(text.length / 3.2)));
+    const g = ac.createGain(); g.gain.value = Math.min(1, vol); g.connect(master);
+    out = g;
+    let t = t0;
+    const ask = /\?\s*$/.test(text);
+    for (let i = 0; i < syl; i++) {
+      const c = text.charCodeAt((i * 3) % text.length);
+      const f = p.base * (1 + (((c * 37) % 9) - 4) * 0.045) * (ask && i === syl - 1 ? 1.3 : 1);
+      const d = (0.07 + (c % 3) * 0.012) / p.rate;
+      tone(f, t, d, { type: p.wave || 'triangle', vol: p.wave === 'sawtooth' || p.wave === 'square' ? 0.12 : 0.16, to: f * (0.85 + (c % 5) * 0.06), attack: 0.008 });
+      t += d + 0.018;
+    }
+    out = null;
+    babbleUntil = t + 0.05;
+    setTimeout(() => g.disconnect(), (t - ac.currentTime) * 1000 + 500);
+  }
+
+  window.Sound = { unlock, play, set, setMood, setRain, speak, stopSpeech, hasVietnamese, settings };
 })();

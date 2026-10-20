@@ -58,6 +58,8 @@ Mỗi loài có 3 skin riêng, mỗi skin có hiệu ứng riêng chạy mượt
 
 Game có **nhạc nền** (vui tươi ban ngày, êm dịu ban đêm) và **hiệu ứng âm thanh**: tiếng chiêu riêng của từng loài, nhảy, trúng đòn, quái chết, nhặt hoa, câu cá, lên cấp, mở quà, đếm ngược và thắng/thua PK, mưa rơi và sấm. Tiếng của người chơi khác nhỏ dần theo khoảng cách. Âm thanh tự bật sau lần bấm đầu tiên (luật của trình duyệt). Nút **🔊** cạnh nút Trời để tắt/bật nhanh; trong bảng Trời có bật/tắt riêng nhạc nền, hiệu ứng và thanh âm lượng. Toàn bộ âm thanh được tạo bằng Web Audio API nên không cần file âm thanh.
 
+**Giọng nói:** câu của Trưởng làng, Thần Sông, Sư Phụ Gấu Trúc, câu hô khi đánh ("Bá khí!", "Đẳng cấp!"...), câu chat của người chơi đều được đọc thành tiếng, mỗi nhân vật một giọng (Trưởng làng trầm chậm, Thần Sông ồm ồm, Gà Con the thé...). Game dùng giọng đọc tiếng Việt có sẵn của trình duyệt; **Microsoft Edge** có giọng Việt tự nhiên nhất (HoaiMy, NamMinh). Máy không có giọng Việt thì nhân vật nói "ríu rít" kiểu thú. Nút **🗣️ Giọng** trong bảng Trời · Âm thanh để đổi Tiếng Việt / Ríu rít / Tắt.
+
 Nút **🌤️ Trời** ở giữa phía trên màn hình để đổi trời sáng / chiều / tối và thời tiết nắng / mưa / tuyết. Mặc định cả hai đều **tự động**: một ngày dài 5 phút, thời tiết đổi mỗi 2 phút rưỡi theo đồng hồ thật nên mọi người chơi cùng thấy một kiểu trời. Ai chọn tay thì chỉ đổi trên máy người đó. Trên điện thoại sẽ có nút cảm ứng. Tiến độ được lưu trong `data/players.json` theo từng trình duyệt.
 
 ## Kiểm thử
