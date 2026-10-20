@@ -1460,9 +1460,17 @@
 
   // ---------- Trời & thời tiết ----------
   const TOD = { day: 0, dusk: 1, night: 2 };
-  const env = { time: store.get('time') || 'day', weather: store.get('weather') || 'clear', tod: 0, rain: 0, snow: 0, cover: 0, flash: 0, nextFlash: 0 };
+  // mặc định cả thời gian và thời tiết đều tự động; người chơi vẫn chọn tay được trong bảng Trời
+  const env = { time: store.get('time') || 'auto', weather: store.get('weather') || 'auto', tod: 0, rain: 0, snow: 0, cover: 0, flash: 0, nextFlash: 0 };
   if (!(env.time in TOD) && env.time !== 'auto') env.time = 'day';
-  if (!['clear', 'rain', 'snow'].includes(env.weather)) env.weather = 'clear';
+  if (!['auto', 'clear', 'rain', 'snow'].includes(env.weather)) env.weather = 'auto';
+  // Thời tiết tự động: cứ 2 phút rưỡi đổi một lần theo đồng hồ thật, nên mọi người chơi thấy cùng một kiểu trời
+  function weatherNow() {
+    if (env.weather !== 'auto') return env.weather;
+    const v = Math.sin(Math.floor(Date.now() / 150000) * 91.7 + 13.1) * 43758.5453;
+    const r = v - Math.floor(v);
+    return r < 0.6 ? 'clear' : r < 0.82 ? 'rain' : 'snow';
+  }
   function todTarget() {
     if (env.time !== 'auto') return TOD[env.time];
     const ph = (Date.now() / 1000 % 300) / 300; // tự động: một ngày dài 5 phút
@@ -1472,15 +1480,18 @@
     return 2 - ((ph - 0.85) / 0.15) * 2;
   }
   env.tod = todTarget();
-  env.rain = env.weather === 'rain' ? 1 : 0;
-  env.snow = env.cover = env.weather === 'snow' ? 1 : 0;
+  env.rain = weatherNow() === 'rain' ? 1 : 0;
+  env.snow = env.cover = weatherNow() === 'snow' ? 1 : 0;
   const clamp01 = (v) => Math.max(0, Math.min(1, v));
   const nightK = () => clamp01(env.tod - 1);
   const duskK = () => clamp01(1 - Math.abs(env.tod - 1));
   function updateEnv(dt, now) {
     env.tod += (todTarget() - env.tod) * Math.min(1, dt * 1.2);
-    env.rain += ((env.weather === 'rain' ? 1 : 0) - env.rain) * Math.min(1, dt * 0.8);
-    env.snow += ((env.weather === 'snow' ? 1 : 0) - env.snow) * Math.min(1, dt * 0.8);
+    const w = weatherNow();
+    // tự động thì đổi chậm hơn cho tự nhiên (mưa nặng hạt dần, tạnh dần)
+    const rate = env.weather === 'auto' ? 0.25 : 0.8;
+    env.rain += ((w === 'rain' ? 1 : 0) - env.rain) * Math.min(1, dt * rate);
+    env.snow += ((w === 'snow' ? 1 : 0) - env.snow) * Math.min(1, dt * rate);
     env.cover = clamp01(env.cover + (env.snow > 0.5 ? dt * 0.08 : -dt * 0.15));
     if (env.rain > 0.6 && now > env.nextFlash) {
       if (env.nextFlash) { env.flash = 1; sfx('thunder'); }
