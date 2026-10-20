@@ -56,6 +56,8 @@ Mỗi loài có 3 skin riêng, mỗi skin có hiệu ứng riêng chạy mượt
 | Y / N | Nhận / từ chối lời mời tỷ thí |
 | Enter | Chat (hiện bong bóng trên đầu nhân vật) |
 
+Game có **nhạc nền** (vui tươi ban ngày, êm dịu ban đêm) và **hiệu ứng âm thanh**: tiếng chiêu riêng của từng loài, nhảy, trúng đòn, quái chết, nhặt hoa, câu cá, lên cấp, mở quà, đếm ngược và thắng/thua PK, mưa rơi và sấm. Tiếng của người chơi khác nhỏ dần theo khoảng cách. Âm thanh tự bật sau lần bấm đầu tiên (luật của trình duyệt). Nút **🔊** cạnh nút Trời để tắt/bật nhanh; trong bảng Trời có bật/tắt riêng nhạc nền, hiệu ứng và thanh âm lượng. Toàn bộ âm thanh được tạo bằng Web Audio API nên không cần file âm thanh.
+
 Nút **🌤️ Trời** ở giữa phía trên màn hình để đổi trời sáng / chiều / tối / tự động và thời tiết nắng / mưa / tuyết (mỗi người chơi tự chọn trên máy mình). Trên điện thoại sẽ có nút cảm ứng. Tiến độ được lưu trong `data/players.json` theo từng trình duyệt.
 
 ## Kiểm thử

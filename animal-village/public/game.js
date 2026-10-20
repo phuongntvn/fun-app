@@ -637,6 +637,11 @@
   };
   $('nameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('startBtn').click(); });
 
+  // ---------- Âm thanh ----------
+  const sfx = (name, x) => window.Sound && Sound.play(name, x == null || !WORLD ? 1 : Math.max(0, 1 - Math.abs(x - me.x) / 900));
+  // trình duyệt chỉ cho phát tiếng sau khi người chơi bấm hoặc gõ phím
+  for (const ev of ['pointerdown', 'keydown']) window.addEventListener(ev, () => window.Sound && Sound.unlock(), { passive: true });
+
   // ---------- Game ----------
   let WORLD = null, MTYPES = {};
   const canvas = $('view'), ctx = canvas.getContext('2d');
@@ -652,6 +657,7 @@
   const keys = {};
   let jumpQueued = false, talkQueued = false, fishQueued = false, pkQueued = false;
   const atkHeld = [false, false];
+  const atkTap = [0, 0]; // thời điểm bấm gần nhất, để lần bấm nhanh (nhấn và nhả trong một khung hình) không bị mất
   let dialogOpen = false, dialogOptions = [], dialogNpc = 'chief';
   const pickupSent = new Map();
   let reconnectTimer = null;
@@ -724,15 +730,16 @@
         break;
       case 'atk': {
         const p = players.get(msg.id);
-        if (p) { p.atkStart = now; p.atkK = msg.k; spawnAttackFx(p.rx, p.ry, p.dir, p.info.species, msg.k); }
+        if (p) { p.atkStart = now; p.atkK = msg.k; spawnAttackFx(p.rx, p.ry, p.dir, p.info.species, msg.k); sfx(p.info.species + msg.k, p.rx); }
         break;
       }
       case 'chat':
         addChat(msg);
-        if (msg.kind === 'player') say(msg.id, msg.text);
+        if (msg.kind === 'player') { say(msg.id, msg.text); sfx('chat'); }
         break;
       case 'bubble':
         say(msg.who, msg.text);
+        if (msg.who === 'chief' || msg.who === 'river') sfx('npc', msg.who === 'chief' ? WORLD.chiefX : WORLD.riverGodX);
         if (msg.who === 'chief') addChat({ kind: 'npc', name: 'Trưởng làng', text: msg.text });
         if (msg.who === 'river') addChat({ kind: 'npc', name: 'Thần Sông', text: msg.text });
         break;
@@ -741,6 +748,7 @@
         if (!m) break;
         m.flash = 0.3;
         const mine = msg.by === myId;
+        sfx(msg.crit ? 'crit' : 'hit', m.rx);
         floaters.push({ x: m.rx + (Math.random() * 20 - 10), y: WORLD.groundY - MTYPES[m.type].h - 10, vy: -60, life: 1, text: (msg.crit ? 'Chí mạng! ' : '') + '-' + msg.dmg, color: msg.crit ? '#ff3860' : mine ? '#ffd23f' : '#fff', size: msg.crit ? 20 : 16 });
         for (let i = 0; i < 5; i++) particles.push({ x: m.rx, y: WORLD.groundY - 20, vx: (Math.random() - 0.5) * 200, vy: -Math.random() * 200, life: 0.5, color: '#fff3a0', r: 3 });
         break;
@@ -749,6 +757,7 @@
         const m = monsters.get(msg.m);
         if (!m) break;
         m.dead = true;
+        sfx(MTYPES[m.type].boss ? 'bossDie' : 'pop', m.rx);
         for (let i = 0; i < 16; i++) particles.push({ x: m.rx, y: WORLD.groundY - 20, vx: (Math.random() - 0.5) * 260, vy: -Math.random() * 260, life: 0.8, color: ['#ffd1dc', '#fff', '#c9e7ff'][i % 3], r: 5 });
         break;
       }
@@ -757,13 +766,14 @@
         const d = drops.get(msg.id);
         drops.delete(msg.id);
         if (d && msg.by === myId) {
+          sfx('rose');
           floaters.push({ x: d.x, y: WORLD.groundY - 40, vy: -50, life: 1.2, text: '🌹 +1', color: '#ff6f91', size: 18 });
           for (let i = 0; i < 8; i++) particles.push({ x: d.x, y: WORLD.groundY - 14, vx: (Math.random() - 0.5) * 140, vy: -Math.random() * 180, life: 0.6, color: '#ff8fa3', r: 3 });
         }
         break;
       }
       case 'fish': onFish(msg); break;
-      case 'pkInvite': showInvite(msg); break;
+      case 'pkInvite': showInvite(msg); sfx('pkInvite'); break;
       case 'pkStart': {
         addDuel(msg.d);
         if (msg.d.keys.includes(myId)) { cancelFishing(); pkCountdown(duels.get(msg.d.id)); }
@@ -775,11 +785,12 @@
         if (d) d.hp = msg.hp;
         const p = keyPos(msg.victim);
         if (p) {
+          sfx(msg.crit ? 'crit' : 'hit', p.x);
           floaters.push({ x: p.x, y: p.y - 76, vy: -60, life: 1, text: (msg.crit ? 'Chí mạng! ' : '') + '-' + msg.dmg, color: msg.victim === myId ? '#ff4d6d' : msg.crit ? '#ff3860' : '#ffd23f', size: msg.crit ? 20 : 16 });
           for (let i = 0; i < 6; i++) particles.push({ x: p.x, y: p.y - 30, vx: (Math.random() - 0.5) * 220, vy: -Math.random() * 200, life: 0.5, color: '#fff3a0', r: 3 });
         }
         if (msg.victim === myId) { me.vx = msg.dir * 200; me.vy = -220; me.invulnUntil = now + 900; }
-        if (typeof msg.by === 'string') { const n = senseis.get(msg.by); if (n) fx.push({ kind: 'ring', x: n.rx, y: WORLD.groundY, dir: n.dir, ox: 40, oy: -40, r0: 8, r1: 34, color: '#ffd23f', life: 0.25, dur: 0.25, text: 'HÂY Á!' }); }
+        if (typeof msg.by === 'string') { const n = senseis.get(msg.by); if (n) { sfx('sensei', n.rx); fx.push({ kind: 'ring', x: n.rx, y: WORLD.groundY, dir: n.dir, ox: 40, oy: -40, r0: 8, r1: 34, color: '#ffd23f', life: 0.25, dur: 0.25, text: 'HÂY Á!' }); } }
         break;
       }
       case 'pkEnd': {
@@ -787,13 +798,20 @@
         $('pkBar').classList.add('hidden'); $('pkCount').classList.add('hidden');
         const inIt = msg.winner === myId || msg.loser === myId;
         if (msg.winner == null) { if (inIt || !msg.loser) showPkResult('🤝 HÒA!', 'Hai bên ngang tài ngang sức'); }
-        else if (msg.winner === myId) showPkResult('🏆 CHIẾN THẮNG!', msg.reason === 'leave' ? 'Đối thủ đã bỏ chạy' : `Hạ gục ${msg.loserName}`);
-        else if (msg.loser === myId) showPkResult('😵 THUA RỒI...', msg.reason === 'leave' ? 'Con chạy xa quá nên bị xử thua' : 'Tập luyện thêm rồi đấu lại nha!');
+        else if (msg.winner === myId) { sfx('win'); showPkResult('🏆 CHIẾN THẮNG!', msg.reason === 'leave' ? 'Đối thủ đã bỏ chạy' : `Hạ gục ${msg.loserName}`); }
+        else if (msg.loser === myId) { sfx('lose'); showPkResult('😵 THUA RỒI...', msg.reason === 'leave' ? 'Con chạy xa quá nên bị xử thua' : 'Tập luyện thêm rồi đấu lại nha!'); }
         break;
       }
       case 'npcGone': senseis.delete(msg.key); bubbles.delete(msg.key); break;
       case 'story': setTimeout(() => showStory(msg.pages), 1800); break;
-      case 'progress': progress = msg.p; renderProgress(); break;
+      case 'progress': {
+        const prev = progress;
+        progress = msg.p;
+        if (prev && msg.p.level > prev.level) sfx('levelUp');
+        else if (prev && msg.p.stage !== prev.stage) sfx('quest');
+        renderProgress();
+        break;
+      }
       case 'dialog': showDialog(msg.npc, msg.text, msg.options); break;
       case 'dialogClose': hideDialog(); break;
       case 'toast': toast(msg.text); break;
@@ -803,14 +821,15 @@
 
   function onFish(msg) {
     const now = performance.now();
-    if (msg.state === 'wait') { fishing.state = 'wait'; fishing.since = now; }
-    else if (msg.state === 'bite') { fishing.state = 'bite'; fishing.since = now; say(myId, '❗ Cá cắn câu! Nhấn C!'); }
+    if (msg.state === 'wait') { fishing.state = 'wait'; fishing.since = now; sfx('cast'); }
+    else if (msg.state === 'bite') { fishing.state = 'bite'; fishing.since = now; sfx('bite'); say(myId, '❗ Cá cắn câu! Nhấn C!'); }
     else {
       fishing.state = null;
       if (msg.state === 'caught') {
+        sfx(msg.trash ? 'trash' : 'catch');
         floaters.push({ x: me.x - 90, y: WORLD.groundY - 40, vy: -60, life: 1.5, text: msg.trash ? '🩴 ' + msg.name : '🐟 +1 ' + msg.name, color: msg.trash ? '#ccc' : '#4fb3ff', size: 17 });
         for (let i = 0; i < 10; i++) particles.push({ x: me.x - 110, y: WORLD.groundY + 12, vx: (Math.random() - 0.5) * 160, vy: -Math.random() * 220, life: 0.7, color: '#bfe9ff', r: 3 });
-      } else if (msg.text) toast(msg.text);
+      } else { if (msg.state !== 'cancel') sfx('miss'); if (msg.text) toast(msg.text); }
     }
   }
 
@@ -876,6 +895,7 @@
   // ---------- Hội thoại ----------
   const portrait = $('npcPortrait').getContext('2d');
   function showDialog(npc, text, options) {
+    if (!dialogOpen) sfx('dialog');
     dialogOpen = true; dialogOptions = options; dialogNpc = npc;
     $('dialog').classList.remove('hidden');
     $('dialogName').textContent = npc === 'river' ? '🌊 Thần Sông' : '🐢 Trưởng làng';
@@ -899,6 +919,7 @@
 
   // ---------- Quà VIP ----------
   function showGift(g) {
+    setTimeout(() => sfx('gift'), 1700);
     hideDialog();
     $('giftModal').classList.remove('hidden');
     $('giftReveal').classList.add('hidden');
@@ -1007,6 +1028,7 @@
     const step = () => {
       if (!duels.has(d.id) || d.state === 'fight') { el.classList.add('hidden'); return; }
       el.textContent = n > 0 ? n : 'ĐÁNH!';
+      sfx(n > 0 ? 'beep' : 'go');
       el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
       n--;
       setTimeout(step, 1000);
@@ -1063,6 +1085,7 @@
     requestAnimationFrame(drawStoryArt);
   }
   function renderStoryPage() {
+    sfx('page');
     const p = story.pages[story.i];
     $('storyStep').textContent = `TRANG ${story.i + 1}/${story.pages.length}`;
     $('storyTitle').textContent = p.title; $('storyText').textContent = p.text;
@@ -1184,8 +1207,8 @@
     if (e.key === 'Escape' && dialogOpen) { send({ t: 'npc', npc: dialogNpc, action: 'bye' }); return; }
     if (KEYMAP[e.key]) keys[KEYMAP[e.key]] = true;
     if (['ArrowUp', 'w', 'W', ' '].includes(e.key) && !e.repeat) jumpQueued = true;
-    if (['j', 'J', 'z', 'Z'].includes(e.key)) atkHeld[0] = true;
-    if (['k', 'K', 'x', 'X'].includes(e.key)) atkHeld[1] = true;
+    if (['j', 'J', 'z', 'Z'].includes(e.key)) { atkHeld[0] = true; if (!e.repeat) atkTap[0] = performance.now(); }
+    if (['k', 'K', 'x', 'X'].includes(e.key)) { atkHeld[1] = true; if (!e.repeat) atkTap[1] = performance.now(); }
     if (['e', 'E', 'f', 'F'].includes(e.key) && !e.repeat) talkQueued = true;
     if (['c', 'C'].includes(e.key) && !e.repeat) fishQueued = true;
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
@@ -1201,7 +1224,7 @@
     const down = (e) => {
       e.preventDefault();
       if (k === 'jump') jumpQueued = true; else if (k === 'talk') talkQueued = true; else if (k === 'fish') fishQueued = true; else if (k === 'pk') pkQueued = true;
-      else if (k === 'attack') atkHeld[0] = true; else if (k === 'skill') atkHeld[1] = true; else keys[k] = true;
+      else if (k === 'attack') { atkHeld[0] = true; atkTap[0] = performance.now(); } else if (k === 'skill') { atkHeld[1] = true; atkTap[1] = performance.now(); } else keys[k] = true;
     };
     const up = (e) => { e.preventDefault(); if (k === 'attack') atkHeld[0] = false; else if (k === 'skill') atkHeld[1] = false; else keys[k] = false; };
     b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up);
@@ -1209,7 +1232,7 @@
   });
   for (const i of [0, 1]) {
     const b = $('skill' + i);
-    b.addEventListener('pointerdown', (e) => { e.preventDefault(); atkHeld[i] = true; });
+    b.addEventListener('pointerdown', (e) => { e.preventDefault(); atkHeld[i] = true; atkTap[i] = performance.now(); });
     for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => { atkHeld[i] = false; });
   }
   $('fishBtn').addEventListener('click', () => { fishQueued = true; });
@@ -1332,8 +1355,8 @@
     if (dirIn) { me.dir = dirIn; cancelFishing(); }
     if (jumpQueued && !typing) {
       cancelFishing();
-      if (me.onGround) { me.vy = -JUMP; me.jumps = 1; me.onGround = false; }
-      else if (me.jumps < 2) { me.vy = -JUMP * 0.9; me.jumps = 2; for (let i = 0; i < 6; i++) particles.push({ x: me.x, y: me.y, vx: (Math.random() - 0.5) * 120, vy: Math.random() * 60, life: 0.4, color: '#fff', r: 4 }); }
+      if (me.onGround) { me.vy = -JUMP; me.jumps = 1; me.onGround = false; sfx('jump'); }
+      else if (me.jumps < 2) { me.vy = -JUMP * 0.9; me.jumps = 2; sfx('jump2'); for (let i = 0; i < 6; i++) particles.push({ x: me.x, y: me.y, vx: (Math.random() - 0.5) * 120, vy: Math.random() * 60, life: 0.4, color: '#fff', r: 4 }); }
     }
     jumpQueued = false;
     if (keys.down && me.onGround && me.y < WORLD.groundY) { me.dropUntil = now + 250; me.onGround = false; }
@@ -1356,12 +1379,14 @@
     // Đánh (J) và tuyệt chiêu (K)
     const atks = SPECIES[mySpecies].attacks;
     for (const k of [0, 1]) {
-      if (atkHeld[k] && !typing && now > me.cd[k] && now > me.atkUntil) {
+      if ((atkHeld[k] || now - atkTap[k] < 250) && !typing && now > me.cd[k] && now > me.atkUntil) {
+        atkTap[k] = 0;
         me.cd[k] = now + atks[k].cd; me.atkK = k; me.atkUntil = now + ATK_DUR[k];
         cancelFishing();
         sendState(now);
         send({ t: 'attack', k });
         spawnAttackFx(me.x, me.y, me.dir, mySpecies, k);
+        sfx(mySpecies + k);
       }
       const left = Math.max(0, me.cd[k] - now);
       $('skill' + k).querySelector('i').style.height = (left / atks[k].cd) * 100 + '%';
@@ -1373,7 +1398,7 @@
         if (m.dead) continue;
         const ti = MTYPES[m.type];
         if (Math.abs(m.rx - me.x) < ti.w / 2 - 2 && me.y > WORLD.groundY - ti.h + 4) {
-          me.hp -= ti.dmg; me.lastHurt = now;
+          me.hp -= ti.dmg; me.lastHurt = now; sfx('hurt');
           me.invulnUntil = now + 1000;
           me.vx = (me.x < m.rx ? -1 : 1) * 260; me.vy = -320;
           cancelFishing();
@@ -1458,7 +1483,7 @@
     env.snow += ((env.weather === 'snow' ? 1 : 0) - env.snow) * Math.min(1, dt * 0.8);
     env.cover = clamp01(env.cover + (env.snow > 0.5 ? dt * 0.08 : -dt * 0.15));
     if (env.rain > 0.6 && now > env.nextFlash) {
-      if (env.nextFlash) env.flash = 1;
+      if (env.nextFlash) { env.flash = 1; sfx('thunder'); }
       env.nextFlash = now + 7000 + Math.random() * 9000;
     }
     env.flash = Math.max(0, env.flash - dt * 2.5);
@@ -1474,6 +1499,24 @@
     $('envToggle').setAttribute('aria-expanded', String(open));
   };
   refreshEnvUI();
+  function refreshSoundUI() {
+    const st = window.Sound ? Sound.settings : { music: false, sfx: false, volume: 0 };
+    $('sndMusic').classList.toggle('on', st.music);
+    $('sndSfx').classList.toggle('on', st.sfx);
+    $('sndVolume').value = Math.round(st.volume * 100);
+    const muted = !st.music && !st.sfx;
+    $('muteBtn').textContent = muted ? '🔇' : '🔊';
+    $('muteBtn').setAttribute('aria-label', muted ? 'Bật âm thanh' : 'Tắt âm thanh');
+  }
+  $('sndMusic').onclick = () => { Sound.unlock(); Sound.set('music', !Sound.settings.music); refreshSoundUI(); };
+  $('sndSfx').onclick = () => { Sound.unlock(); Sound.set('sfx', !Sound.settings.sfx); refreshSoundUI(); sfx('click'); };
+  $('sndVolume').oninput = (e) => { Sound.set('volume', e.target.value / 100); };
+  $('muteBtn').onclick = () => {
+    Sound.unlock();
+    const on = !(Sound.settings.music || Sound.settings.sfx);
+    Sound.set('music', on); Sound.set('sfx', on); refreshSoundUI();
+  };
+  refreshSoundUI();
 
   const SKY = { day: ['#7cc8ff', '#cfeeff', '#fff0f5'], dusk: ['#5b5fb4', '#ff9e7a', '#ffd59e'], night: ['#060b2b', '#16205a', '#2e3570'] };
   const RAIN_SKY = ['#5f6b7d', '#8c98a8', '#aeb7c2'], SNOW_SKY = ['#aebdd0', '#dbe4ee', '#f2f6fa'];
@@ -2011,6 +2054,7 @@
     if (!WORLD) return;
     updateMe(dt, now);
     updateEnv(dt, now);
+    if (window.Sound) { Sound.setRain(env.rain); Sound.setMood(nightK() > 0.5 ? 'night' : 'day'); }
     const turn = Math.min(1, dt * 14);
     me.face += (me.dir - me.face) * turn;
 
