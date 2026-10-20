@@ -22,7 +22,7 @@ function expToNext(level) { return 20 + level * 15; }
 function newRecord(token) {
   return {
     token, name: 'Bạn nhỏ', species: 'hamster', skin: 0, level: 1, exp: 0,
-    roses: 0, fish: 0, chest: 0, key: 0, giftsOpened: 0, stage: 0,
+    roses: 0, fish: 0, chest: 0, key: 0, giftsOpened: 0, stage: 0, graduated: false, pkWins: 0,
   };
 }
 
@@ -96,7 +96,7 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
     return {
       level: r.level, exp: r.exp, expNext: expToNext(r.level),
       roses: r.roses, fish: r.fish, chest: r.chest, key: r.key, giftsOpened: r.giftsOpened,
-      stage: r.stage, stageTitle: st.title, stageHint: st.hint,
+      stage: r.stage, stageCount: D.STAGES.length, stageTitle: st.title, stageHint: st.hint, graduated: !!r.graduated, pkWins: r.pkWins || 0,
       rosesNeed: D.ROSES_FOR_CHEST, fishNeed: D.FISH_FOR_KEY,
     };
   }
@@ -141,8 +141,18 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
         def = 'Rương báu có rồi, chìa khóa vàng cũng có rồi! Để ta mở cho con nào, hồi hộp chưa?';
         options.push({ id: 'open', label: 'Mở rương báu! 🗝️🎁' });
         break;
+      case 5:
+        def = 'Quà VIP là của con rồi! Nhưng muốn tốt nghiệp Khóa Học Trưởng Thành thì còn một thử thách cuối: tỷ thí PK và giành chiến thắng. Con dám không?';
+        options.push({ id: 'final', label: 'Con dám! Nhận nhiệm vụ tỷ thí ⚔️' });
+        break;
+      case 6:
+        def = s.duel ? 'Đang tỷ thí mà còn chạy lại đây hả? Tập trung đánh đi con!' : 'Đến gần một bạn khác rồi nhấn P để mời tỷ thí. Không có ai thì ta gọi Sư Phụ Gấu Trúc ra đấu với con nha!';
+        if (!s.duel) options.push({ id: 'sensei', label: 'Gọi Sư Phụ Gấu Trúc ra tỷ thí 🐼' });
+        break;
       default:
-        def = 'Con đã nhận quà VIP rồi đó! Muốn đi lại hành trình từ đầu không?';
+        def = 'Con đã tốt nghiệp Khóa Học Trưởng Thành rồi! Muốn xem lại câu chuyện, hay đi lại hành trình từ đầu?';
+        options.push({ id: 'story', label: 'Xem lại câu chuyện 📖' });
+        if (!s.duel) options.push({ id: 'sensei', label: 'Tỷ thí giao hữu với Sư Phụ Gấu Trúc 🐼' });
         options.push({ id: 'restart', label: 'Đi lại hành trình từ đầu' });
     }
     options.push({ id: 'joke', label: 'Kể chuyện cười đi ông ơi' });
@@ -176,8 +186,17 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
           return;
         }
         break;
+      case 'final':
+        if (r.stage === 5) { r.stage = 6; text = 'Tốt lắm! Đến gần một bạn khác rồi nhấn P để mời tỷ thí, thắng 1 trận là tốt nghiệp. Không có ai online thì nói ta gọi Sư Phụ Gấu Trúc nhé!'; }
+        break;
+      case 'sensei':
+        if (r.stage >= 6 && !s.duel) { send(s, { t: 'dialogClose' }); return callSensei(s, Date.now()); }
+        break;
+      case 'story':
+        if (r.stage === 7) return send(s, { t: 'story', pages: storyFor(r) });
+        break;
       case 'restart':
-        if (r.stage === 5) { r.stage = 1; text = `Lại đi săn ${R} bông hoa hồng nào! Lần này ta giấu chìa khóa kỹ hơn... đùa thôi, vẫn ở dưới sông.`; }
+        if (r.stage === 7) { r.stage = 1; text = `Lại đi săn ${R} bông hoa hồng nào! Lần này ta giấu chìa khóa kỹ hơn... đùa thôi, vẫn ở dưới sông.`; }
         break;
       case 'joke':
         text = pick(D.LINES.jokes);
@@ -290,6 +309,7 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
     s.cd[k] = now;
     stopFishing(s);
     broadcast({ t: 'atk', id: s.id, k }, s);
+    pkAttack(s, a, now);
     if (random() < 0.3) broadcast({ t: 'bubble', who: s.id, text: pick(random() < 0.5 ? D.LINES.cries : sp.cries) });
     const r = s.rec;
     const hits = [];
@@ -344,6 +364,163 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
     sendProgress(s);
   }
 
+  // ---------- Tỷ thí PK ----------
+  // Mỗi trận có 2 đấu thủ: người chơi (khóa là id phiên) hoặc Sư Phụ Gấu Trúc (khóa 'npc<số>')
+  const duels = new Map(); // id -> {id, keys:[a,b], hp:{}, state:'count'|'fight', goAt, endsAt}
+  const senseis = new Map(); // khóa -> {key, x, dir, hp, nextAtk, windUntil, anim, duel}
+  let nextDuel = 1, nextNpc = 1;
+  const pkCountdown = timing.pkCountdown ?? D.PK.countdown;
+
+  function fighter(key) {
+    if (typeof key === 'string') { const n = senseis.get(key); return n && { key, x: n.x, y: D.WORLD.groundY, name: D.SENSEI.name, npc: n }; }
+    const s = sessions.get(key);
+    return s && s.joined && { key, x: s.x, y: s.y, name: s.rec.name, s };
+  }
+  function duelInfo(d) {
+    return { id: d.id, keys: d.keys, names: d.keys.map((k) => fighter(k)?.name || '?'), hp: d.hp, state: d.state, endsIn: Math.max(0, d.endsAt - Date.now()) };
+  }
+
+  function startDuel(keyA, keyB, now) {
+    const d = { id: nextDuel++, keys: [keyA, keyB], hp: { [keyA]: D.PK.hp, [keyB]: D.PK.hp }, state: 'count', goAt: now + pkCountdown, endsAt: now + pkCountdown + D.PK.duration };
+    duels.set(d.id, d);
+    for (const k of d.keys) { const f = fighter(k); if (f?.s) { f.s.duel = d.id; f.s.invite = null; stopFishing(f.s); } if (f?.npc) f.npc.duel = d.id; }
+    broadcast({ t: 'pkStart', d: duelInfo(d) });
+    const [a, b] = d.keys.map((k) => fighter(k).name);
+    system(`⚔️ ${a} và ${b} bắt đầu tỷ thí PK! Mọi người ra cổ vũ nào!`);
+    return d;
+  }
+
+  function endDuel(d, winnerKey, reason) {
+    if (!duels.has(d.id)) return;
+    duels.delete(d.id);
+    const loserKey = winnerKey == null ? null : d.keys.find((k) => k !== winnerKey);
+    const W = winnerKey == null ? null : fighter(winnerKey), L = loserKey == null ? null : fighter(loserKey);
+    broadcast({ t: 'pkEnd', id: d.id, winner: winnerKey, loser: loserKey, reason, winnerName: W?.name, loserName: L?.name });
+    for (const k of d.keys) { const f = fighter(k); if (f?.s) f.s.duel = null; }
+    if (W && L) system(`🏆 ${W.name} đã thắng ${L.name} trong trận tỷ thí${reason === 'time' ? ' (hết giờ, nhiều máu hơn)' : reason === 'leave' ? ' (đối thủ bỏ chạy)' : ''}!`);
+    else system('🤝 Trận tỷ thí hòa!');
+    if (W?.s) {
+      broadcast({ t: 'bubble', who: W.key, text: pick(D.LINES.pkWin) });
+      const r = W.s.rec;
+      r.pkWins = (r.pkWins || 0) + 1;
+      if (r.stage === 6) {
+        r.stage = 7; r.graduated = true;
+        addExp(W.s, 100);
+        system(`🎓 ${r.name} đã tốt nghiệp Khóa Học Trưởng Thành!`);
+        send(W.s, { t: 'story', pages: storyFor(r) });
+      }
+      sendProgress(W.s);
+    }
+    if (L?.s) {
+      broadcast({ t: 'bubble', who: L.key, text: pick(D.LINES.pkLose) });
+      if (L.s.rec.stage === 6) npcSay('chief', 'Thua một trận chưa phải là hết đâu con. Tập luyện thêm rồi tỷ thí lại nha!', L.s);
+    }
+    for (const k of d.keys) {
+      const n = senseis.get(k);
+      if (!n) continue;
+      broadcast({ t: 'bubble', who: k, text: k === winnerKey ? D.LINES.senseiWin : D.LINES.senseiLose });
+      setTimeout(() => { senseis.delete(k); broadcast({ t: 'npcGone', key: k }); }, 2500);
+    }
+  }
+
+  function storyFor(r) { return D.LINES.story.map((p) => ({ ...p, text: D.fill(p.text, { name: r.name }) })); }
+
+  // Đòn đánh trúng đối thủ trong trận: dùng đúng tầm đánh của chiêu
+  function pkHit(d, attackerKey, victimKey, base, mul, now, dir) {
+    const crit = random() < 0.15;
+    let dmg = Math.round(base * mul);
+    if (crit) dmg *= 2;
+    d.hp[victimKey] = Math.max(0, d.hp[victimKey] - dmg);
+    broadcast({ t: 'pkHit', id: d.id, by: attackerKey, victim: victimKey, dmg, crit, dir, hp: d.hp });
+    const n = senseis.get(victimKey);
+    if (n) { n.x += dir * 18; if (random() < 0.25) broadcast({ t: 'bubble', who: victimKey, text: pick(D.LINES.senseiTaunt) }); }
+    if (d.hp[victimKey] <= 0) endDuel(d, attackerKey, 'ko');
+  }
+
+  function pkAttack(s, a, now) {
+    const d = s.duel && duels.get(s.duel);
+    if (!d || d.state !== 'fight') return;
+    const otherKey = d.keys.find((k) => k !== s.id);
+    const o = fighter(otherKey);
+    if (!o) return;
+    const rel = (o.x - s.x) * s.dir;
+    if (rel < -a.back - 25 || rel > a.front + 25 || Math.abs(o.y - s.y) > 80) return;
+    const away = rel >= 0 ? s.dir : -s.dir;
+    pkHit(d, s.id, otherKey, 6 + s.rec.level * 2 + rnd(0, 4), a.mul, now, away);
+  }
+
+  function invite(s, targetId, now) {
+    const t = sessions.get(targetId);
+    if (!t || !t.joined || t === s) return;
+    if (s.duel) return send(s, { t: 'toast', text: 'Con đang tỷ thí rồi mà!' });
+    if (t.duel) return send(s, { t: 'toast', text: `${t.rec.name} đang bận tỷ thí với người khác.` });
+    if (Math.abs(t.x - s.x) > D.PK.inviteRange || Math.abs(t.y - s.y) > 120) return send(s, { t: 'toast', text: 'Lại gần bạn ấy hơn để mời tỷ thí nha!' });
+    t.invite = { from: s.id, until: now + D.PK.inviteTimeout };
+    send(t, { t: 'pkInvite', from: s.id, name: s.rec.name, species: D.SPECIES[s.rec.species].name });
+    send(s, { t: 'toast', text: `Đã gửi lời mời tỷ thí tới ${t.rec.name}!` });
+  }
+
+  function answer(s, from, ok, now) {
+    const inv = s.invite;
+    s.invite = null;
+    const o = sessions.get(from);
+    if (!inv || inv.from !== from || now > inv.until || !o || !o.joined) return send(s, { t: 'toast', text: 'Lời mời đã hết hạn rồi.' });
+    if (!ok) return send(o, { t: 'toast', text: `${s.rec.name} từ chối tỷ thí. Lần sau nha!` });
+    if (s.duel || o.duel) return send(s, { t: 'toast', text: 'Một trong hai bạn đang bận tỷ thí.' });
+    if (Math.abs(o.x - s.x) > D.PK.leaveRange) return send(s, { t: 'toast', text: 'Hai bạn đứng xa nhau quá rồi.' });
+    startDuel(from, s.id, now);
+  }
+
+  function callSensei(s, now) {
+    if (s.duel) return;
+    const key = 'npc' + nextNpc++;
+    const x = Math.max(D.WORLD.minX + 40, Math.min(D.WORLD.width - 40, s.x + 160));
+    senseis.set(key, { key, x, dir: -1, hp: D.SENSEI.hp, nextAtk: now + pkCountdown + 800, windUntil: 0, anim: 'idle', duel: null });
+    broadcast({ t: 'bubble', who: key, text: 'Hô hô! Ta là Sư Phụ Gấu Trúc. Đỡ chiêu đây!' });
+    startDuel(s.id, key, now);
+  }
+
+  function tickDuels(now, dt) {
+    for (const d of [...duels.values()]) {
+      const fs2 = d.keys.map(fighter);
+      if (fs2.some((f) => !f)) { endDuel(d, fs2[0] ? d.keys[0] : fs2[1] ? d.keys[1] : null, 'leave'); continue; }
+      if (d.state === 'count' && now >= d.goAt) { d.state = 'fight'; broadcast({ t: 'pkGo', id: d.id }); }
+      if (Math.abs(fs2[0].x - fs2[1].x) > D.PK.leaveRange) {
+        // người chơi chạy xa là bỏ cuộc (gấu trúc luôn đuổi theo nên không tính)
+        const runner = fs2[0].s ? 0 : 1;
+        endDuel(d, d.keys[1 - runner], 'leave'); continue;
+      }
+      if (now >= d.endsAt) {
+        const [a, b] = d.keys;
+        endDuel(d, d.hp[a] === d.hp[b] ? null : d.hp[a] > d.hp[b] ? a : b, 'time');
+      }
+    }
+    // AI Sư Phụ Gấu Trúc: đuổi theo, vung chưởng có báo trước
+    for (const n of senseis.values()) {
+      const d = duels.get(n.duel);
+      if (!d) { n.anim = 'idle'; continue; }
+      const foeKey = d.keys.find((k) => k !== n.key);
+      const foe = fighter(foeKey);
+      if (!foe) continue;
+      const dx = foe.x - n.x;
+      n.dir = dx > 0 ? 1 : -1;
+      if (n.windUntil) {
+        if (now >= n.windUntil) {
+          n.windUntil = 0; n.anim = 'idle';
+          if (d.state === 'fight' && Math.abs(foe.x - n.x) < D.SENSEI.range + 15 && Math.abs(foe.y - D.WORLD.groundY) < 80) pkHit(d, n.key, foeKey, rnd(D.SENSEI.dmgMin, D.SENSEI.dmgMax), 1, now, n.dir);
+        }
+        continue;
+      }
+      if (Math.abs(dx) > D.SENSEI.range - 15) { n.x += n.dir * D.SENSEI.speed * dt; n.anim = 'run'; }
+      else n.anim = 'idle';
+      if (d.state === 'fight' && Math.abs(dx) < D.SENSEI.range && now >= n.nextAtk) {
+        n.windUntil = now + 350; n.anim = 'atk';
+        n.nextAtk = now + D.SENSEI.atkEvery + random() * 500;
+      }
+    }
+    for (const s of sessions.values()) if (s.invite && now > s.invite.until) s.invite = null;
+  }
+
   // ---------- Kết nối ----------
   function handle(s, msg, now) {
     if (!s.joined) {
@@ -363,6 +540,7 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
         players: [...sessions.values()].filter((o) => o.joined).map(publicInfo),
         monsters: monsters.map((m) => ({ id: m.id, type: m.type, x: m.x, dir: m.dir, hp: m.hp, maxHp: m.maxHp, dead: m.dead })),
         drops: [...drops.values()],
+        duels: [...duels.values()].map(duelInfo),
       });
       broadcast({ t: 'pinfo', p: publicInfo(s) }, s);
       sendProgress(s);
@@ -388,7 +566,9 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
       case 'attack': attack(s, msg.k, now); break;
       case 'npc': handleNpc(s, msg.npc, msg.action); break;
       case 'pickup': pickup(s, msg.id, now); break;
-      case 'cast': cast(s); break;
+      case 'pkInvite': invite(s, msg.id, now); break;
+      case 'pkAnswer': answer(s, msg.from, !!msg.ok, now); break;
+      case 'cast': if (!s.duel) cast(s); break;
       case 'reel': reel(s); break;
       case 'unfish': stopFishing(s); break;
       case 'died':
@@ -417,7 +597,7 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
 
   const wss = new WebSocketServer({ server, path: '/ws' });
   wss.on('connection', (ws) => {
-    const s = { id: nextId++, ws, joined: false, cd: {}, fishing: null };
+    const s = { id: nextId++, ws, joined: false, cd: {}, fishing: null, duel: null, invite: null };
     sessions.set(s.id, s);
     ws.on('message', (data) => {
       let msg;
@@ -440,6 +620,7 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
   const loop = setInterval(() => {
     const now = Date.now();
     tickMonsters(now, (now - last) / 1000);
+    tickDuels(now, (now - last) / 1000);
     last = now;
     if (now > idleAt) {
       idleAt = now + 15000 + random() * 15000;
@@ -450,11 +631,12 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
       t: 'snap',
       p: [...sessions.values()].filter((s) => s.joined).map((s) => [s.id, Math.round(s.x), Math.round(s.y), s.dir, s.anim, s.hp]),
       m: monsters.map((m) => [m.id, Math.round(m.x), m.dir, m.hp, m.dead ? 1 : 0]),
+      k: [...senseis.values()].map((n) => [n.key, Math.round(n.x), n.dir, n.anim]),
     });
   }, TICK_MS);
 
   return {
-    server, monsters, records, drops,
+    server, monsters, records, drops, duels, senseis,
     listen(cb) { server.listen(port, host, () => cb && cb(server.address().port)); },
     close(cb) {
       clearInterval(loop);

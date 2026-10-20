@@ -118,8 +118,23 @@ const STAGES = [
   { title: 'Tìm chìa khóa ở lòng sông', hint: 'Đi về phía TRÁI làng, ra bờ sông gặp Thần Sông' },
   { title: 'Câu cá cống nạp Thần Sông', hint: `Đứng ở bến sông, nhấn C để câu. Câu đủ ${FISH_FOR_KEY} con cá rồi nói chuyện với Thần Sông` },
   { title: 'Mang rương và chìa về làng', hint: 'Về gặp Trưởng làng để mở rương báu' },
-  { title: 'Hoàn thành hành trình', hint: 'Con đã nhận quà VIP! Có thể nói chuyện với Trưởng làng để đi lại từ đầu' },
+  { title: 'Nhận nhiệm vụ cuối cùng', hint: 'Con đã nhận quà VIP! Gặp Trưởng làng để nhận nhiệm vụ cuối: Khóa Học Trưởng Thành' },
+  { title: 'Tỷ thí PK', hint: 'Đến gần một bạn khác, nhấn P để mời tỷ thí. Không có ai thì nhờ Trưởng làng gọi Sư Phụ Gấu Trúc. Thắng 1 trận là tốt nghiệp!' },
+  { title: 'Tốt nghiệp Khóa Học Trưởng Thành', hint: 'Con đã trưởng thành! Hẹn gặp ở phần tiếp theo: Hành Trình Đảo Mây Bay...' },
 ];
+
+// Tỷ thí PK
+const PK = {
+  hp: 100,
+  countdown: 3000, // ms đếm ngược trước khi đánh
+  duration: 90000, // trận dài tối đa 90 giây, hết giờ ai nhiều máu hơn thắng
+  inviteRange: 160,
+  leaveRange: 700, // chạy xa đối thủ quá mức này là bỏ cuộc
+  inviteTimeout: 15000,
+};
+
+// Sư Phụ Gấu Trúc: đối thủ luyện tập khi không có người chơi nào khác
+const SENSEI = { name: 'Sư Phụ Gấu Trúc', hp: 100, speed: 95, range: 70, dmgMin: 6, dmgMax: 10, atkEvery: 1100 };
 
 const FISH = [
   { name: 'Cá Rô Mập', w: 30 }, { name: 'Cá Chép Ngố', w: 25 }, { name: 'Cá Trê Râu Dài', w: 18 },
@@ -157,6 +172,19 @@ const LINES = {
   cries: ['Bá khí!', 'Thiệt là bá khí!', 'Đẳng cấp!', 'Haha!', 'Hihi!'],
   vip: 'Chúc mừng con đã nhận được món quà VIP nhất của ta! Con là bạn thú giỏi nhất làng, ta tự hào về con lắm!',
   bye: ['Đi đường cẩn thận nha con!', 'Nhớ ăn uống đầy đủ đó!', 'Bye bye, nhớ ghé thăm ta nha~'],
+  pkWin: ['Thắng rồi! Thiệt là bá khí!', 'Đẳng cấp là đây chứ đâu!', 'Haha, tỷ thí vui ghê!'],
+  pkLose: ['Thua rồi huhu... lần sau gặp lại nha!', 'Hông chịu đâu, đấu lại điii!', 'Thua keo này ta bày keo khác!'],
+  senseiTaunt: ['Hô hô, con đỡ được chiêu này không?', 'Tre già măng mọc, đánh mạnh lên con!', 'Ta ăn tre cả đời chỉ để chờ ngày này!', 'Chậm quá! Nhanh lên nào!'],
+  senseiLose: 'Hô hô, giỏi lắm! Con đã vượt qua ta. Mau về báo tin vui cho lão Rùa đi!',
+  senseiWin: 'Hô hô, chưa đủ trình đâu con. Ăn thêm vài bữa rồi quay lại nhé!',
+  // Câu chuyện sau khi tốt nghiệp, mở đường cho phần sau
+  story: [
+    { scene: 'graduate', title: 'Lễ tốt nghiệp', text: 'Cả Làng Thú Ngộ Nghĩnh tụ tập dưới gốc anh đào. Trưởng làng trao cho {name} tấm bằng "Khóa Học Trưởng Thành", cười móm mém: "Con giờ đã là bạn thú trưởng thành rồi đó!"' },
+    { scene: 'river', title: 'Đêm hôm ấy...', text: 'Thần Sông hà mã bỗng nổi lên giữa dòng, mặt rất nghiêm trọng: "Lúc mò chìa khóa cho con, ta còn thấy thứ này dưới đáy sông..." Ngài giơ lên một tấm bản đồ cổ ướt sũng.' },
+    { scene: 'map', title: 'Tấm bản đồ cổ', text: 'Bản đồ vẽ một hòn đảo lơ lửng trên mây: Đảo Mây Bay. Ở giữa đảo là một tòa lâu đài, bên cạnh có dòng chữ nguệch ngoạc: "Kho báu nắng mặt trời".' },
+    { scene: 'cat', title: 'Kẻ đứng sau tất cả', text: 'Hóa ra Heo Rừng Đại Ca chỉ là đàn em của Vua Mèo Mun Bóng Tối. Hắn đang lén hút hết nắng của các ngôi làng để... phơi cá khô cho riêng mình!' },
+    { scene: 'next', title: 'Còn tiếp...', text: 'Trưởng làng đặt tay lên vai {name}: "Hành trình mới sắp bắt đầu rồi con ạ." Hẹn gặp lại trong phần 2: LÀNG THÚ NGỘ NGHĨNH: HÀNH TRÌNH ĐẢO MÂY BAY!' },
+  ],
   riverBye: ['Bọt bọt, đi đi con!', 'Nhớ quay lại thăm ta nha, ta ở dưới nước buồn lắm.'],
 };
 
@@ -165,7 +193,7 @@ function fill(text, vars = {}) {
 }
 
 const GAME_DATA = {
-  WORLD, SPECIES, MONSTER_TYPES, MONSTER_SPAWNS, STAGES, FISH, LINES,
+  WORLD, SPECIES, MONSTER_TYPES, MONSTER_SPAWNS, STAGES, FISH, LINES, PK, SENSEI,
   ROSES_FOR_CHEST, FISH_FOR_KEY, fill,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = GAME_DATA;

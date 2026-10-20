@@ -58,6 +58,7 @@
       <button type="button" class="skill" id="skill0"><kbd>J</kbd><span></span><i></i></button>
       <button type="button" class="skill" id="skill1"><kbd>K</kbd><span></span><i></i></button>
       <button type="button" class="skill fishbtn hidden" id="fishBtn"><kbd>C</kbd><span>🎣 Câu cá</span></button>
+      <button type="button" class="skill pkbtn hidden" id="pkBtn"><kbd>P</kbd><span>⚔️ Mời tỷ thí</span></button>
     </div>
 
     <div id="chat">
@@ -76,7 +77,7 @@
     </div>
 
     <div id="help" class="help">
-      <b>←→ / A D</b> di chuyển · <b>↑ / W / Space</b> nhảy (2 lần) · <b>J</b> đánh · <b>K</b> tuyệt chiêu · <b>E</b> nói chuyện · <b>C</b> câu cá · <b>↓</b> xuống bục · <b>Enter</b> chat
+      <b>←→ / A D</b> di chuyển · <b>↑ / W / Space</b> nhảy (2 lần) · <b>J</b> đánh · <b>K</b> tuyệt chiêu · <b>E</b> nói chuyện · <b>C</b> câu cá · <b>P</b> mời tỷ thí · <b>↓</b> xuống bục · <b>Enter</b> chat
     </div>
 
     <div id="touch" class="hidden">
@@ -89,6 +90,7 @@
         <button type="button" data-key="skill" class="sk">✨</button>
         <button type="button" data-key="attack" class="atk">⚔</button>
         <button type="button" data-key="fish" class="talk">🎣</button>
+        <button type="button" data-key="pk" class="talk">🤺</button>
         <button type="button" data-key="talk" class="talk">💬</button>
       </div>
     </div>
@@ -131,6 +133,35 @@
           <button type="button" data-weather="clear">🌈 Nắng</button>
           <button type="button" data-weather="rain">🌧️ Mưa</button>
           <button type="button" data-weather="snow">❄️ Tuyết</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="pkBar" class="hidden">
+      <div class="pk-side"><b id="pkNameA"></b><div class="bar hp"><i id="pkHpA"></i><span id="pkHpTextA"></span></div></div>
+      <div class="pk-mid"><span>⚔️</span><small id="pkTimer"></small></div>
+      <div class="pk-side right"><b id="pkNameB"></b><div class="bar hp"><i id="pkHpB"></i><span id="pkHpTextB"></span></div></div>
+    </div>
+    <div id="pkCount" class="hidden"></div>
+    <div id="pkResult" class="hidden"></div>
+
+    <div id="pkInvite" class="hidden" role="dialog" aria-labelledby="pkInviteText">
+      <p id="pkInviteText"></p>
+      <div class="pk-actions">
+        <button type="button" id="pkYes" class="primary small">Đồng ý (Y)</button>
+        <button type="button" id="pkNo" class="ghost">Từ chối (N)</button>
+      </div>
+      <i id="pkInviteTimer"></i>
+    </div>
+
+    <div id="storyModal" class="modal hidden" role="dialog" aria-labelledby="storyTitle">
+      <div class="story-card">
+        <canvas id="storyArt" width="480" height="240"></canvas>
+        <div class="story-page"><span id="storyStep"></span><h2 id="storyTitle"></h2></div>
+        <p id="storyText"></p>
+        <div class="story-actions">
+          <button type="button" id="storyPrev" class="ghost">◀ Trước</button>
+          <button type="button" id="storyNext" class="primary small">Tiếp ▶</button>
         </div>
       </div>
     </div>
