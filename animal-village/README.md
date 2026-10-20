@@ -33,7 +33,7 @@ Mỗi loài có 3 skin riêng, mỗi skin có hiệu ứng riêng chạy mượt
 5. Đứng trên bến gỗ, nhấn **C** để thả câu, thấy dấu ❗ thì nhấn **C** để giật (có khi câu trúng dép 🩴).
 6. Cống nạp cá, Thần Sông mò được **🗝️ chìa khóa**.
 7. Mang rương và chìa về cho Trưởng làng mở, nhận **quà VIP**.
-8. Nhiệm vụ cuối **Khóa Học Trưởng Thành**: thắng một trận **tỷ thí PK**. Đứng gần một bạn khác, nhấn **P** để mời; bạn ấy nhấn **Y** để nhận lời (**N** để từ chối). Không có ai online thì nhờ Trưởng làng gọi **Sư Phụ Gấu Trúc** ra đấu.
+8. Nhiệm vụ cuối **Khóa Học Trưởng Thành**: thắng một trận **tỷ thí PK với người chơi khác**. Đứng gần bạn ấy, nhấn **P** để mời; bạn ấy nhấn **Y** để nhận lời (**N** để từ chối). Muốn luyện tay trước thì nhờ Trưởng làng gọi **Sư Phụ Gấu Trúc**, nhưng thắng gấu trúc không được tính nhiệm vụ.
 9. Thắng là tốt nghiệp, mở ra câu chuyện dẫn sang phần 2: *Hành Trình Đảo Mây Bay*.
 
 ### Luật tỷ thí PK
@@ -41,7 +41,7 @@ Mỗi loài có 3 skin riêng, mỗi skin có hiệu ứng riêng chạy mượt
 - Mỗi bên 100 máu, đếm ngược 3 giây rồi mới được đánh, trận dài tối đa 90 giây.
 - Đánh bằng đúng chiêu J/K của loài mình, trúng đòn bị đẩy lùi. Hết giờ thì ai còn nhiều máu hơn thắng, bằng nhau là hòa.
 - Chạy xa đối thủ quá 700px là bị xử thua.
-- Tỷ thí được với bất kỳ ai, bất kỳ lúc nào; chỉ trận thắng ở bước 8 mới tính tốt nghiệp.
+- Tỷ thí được với bất kỳ ai, bất kỳ lúc nào; chỉ trận thắng **người chơi khác** ở bước 8 mới tính tốt nghiệp.
 
 | Phím | Tác dụng |
 | --- | --- |
@@ -64,4 +64,4 @@ Nút **🌤️ Trời** ở giữa phía trên màn hình để đổi trời s�
 npm test
 ```
 
-Bài test cho 2 người chơi đi hết hành trình qua WebSocket: chat, săn và tự nhặt hoa hồng, đổi rương, nhận nhiệm vụ Thần Sông, câu cá (giật sớm, để cá chạy, câu được), nhận chìa khóa, mở rương nhận quà VIP, tỷ thí PK giữa 2 người (mời, từ chối, đếm ngược, thắng thua, tốt nghiệp, câu chuyện), tỷ thí với Sư Phụ Gấu Trúc, và kiểm tra tầm đánh riêng của từng chiêu.
+Bài test cho 2 người chơi đi hết hành trình qua WebSocket: chat, săn và tự nhặt hoa hồng, đổi rương, nhận nhiệm vụ Thần Sông, câu cá (giật sớm, để cá chạy, câu được), nhận chìa khóa, mở rương nhận quà VIP, tỷ thí PK giữa 2 người (mời, từ chối, đếm ngược, thắng thua, tốt nghiệp, câu chuyện), tỷ thí luyện tập với Sư Phụ Gấu Trúc (không được tốt nghiệp), và kiểm tra tầm đánh riêng của từng chiêu.

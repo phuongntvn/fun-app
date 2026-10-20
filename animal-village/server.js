@@ -142,12 +142,12 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
         options.push({ id: 'open', label: 'Mở rương báu! 🗝️🎁' });
         break;
       case 5:
-        def = 'Quà VIP là của con rồi! Nhưng muốn tốt nghiệp Khóa Học Trưởng Thành thì còn một thử thách cuối: tỷ thí PK và giành chiến thắng. Con dám không?';
+        def = 'Quà VIP là của con rồi! Nhưng muốn tốt nghiệp Khóa Học Trưởng Thành thì còn một thử thách cuối: tỷ thí PK với một người chơi khác và giành chiến thắng. Con dám không?';
         options.push({ id: 'final', label: 'Con dám! Nhận nhiệm vụ tỷ thí ⚔️' });
         break;
       case 6:
-        def = s.duel ? 'Đang tỷ thí mà còn chạy lại đây hả? Tập trung đánh đi con!' : 'Đến gần một bạn khác rồi nhấn P để mời tỷ thí. Không có ai thì ta gọi Sư Phụ Gấu Trúc ra đấu với con nha!';
-        if (!s.duel) options.push({ id: 'sensei', label: 'Gọi Sư Phụ Gấu Trúc ra tỷ thí 🐼' });
+        def = s.duel ? 'Đang tỷ thí mà còn chạy lại đây hả? Tập trung đánh đi con!' : 'Nhiệm vụ của con là tỷ thí và thắng một NGƯỜI CHƠI KHÁC. Đến gần bạn ấy rồi nhấn P để mời. Muốn luyện tay trước thì ta gọi Sư Phụ Gấu Trúc, nhưng thắng ông ấy không tính đâu nha!';
+        if (!s.duel) options.push({ id: 'sensei', label: 'Luyện tập với Sư Phụ Gấu Trúc (không tính nhiệm vụ) 🐼' });
         break;
       default:
         def = 'Con đã tốt nghiệp Khóa Học Trưởng Thành rồi! Muốn xem lại câu chuyện, hay đi lại hành trình từ đầu?';
@@ -187,7 +187,7 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
         }
         break;
       case 'final':
-        if (r.stage === 5) { r.stage = 6; text = 'Tốt lắm! Đến gần một bạn khác rồi nhấn P để mời tỷ thí, thắng 1 trận là tốt nghiệp. Không có ai online thì nói ta gọi Sư Phụ Gấu Trúc nhé!'; }
+        if (r.stage === 5) { r.stage = 6; text = 'Tốt lắm! Tìm một người chơi khác, đến gần rồi nhấn P để mời tỷ thí. Thắng 1 trận là tốt nghiệp! Rủ bạn bè vào làng chơi cùng nha.'; }
         break;
       case 'sensei':
         if (r.stage >= 6 && !s.duel) { send(s, { t: 'dialogClose' }); return callSensei(s, Date.now()); }
@@ -403,7 +403,9 @@ function createGame({ dataFile, random = Math.random, port = 3000, host = '0.0.0
       broadcast({ t: 'bubble', who: W.key, text: pick(D.LINES.pkWin) });
       const r = W.s.rec;
       r.pkWins = (r.pkWins || 0) + 1;
-      if (r.stage === 6) {
+      // chỉ thắng người chơi khác mới tính nhiệm vụ, thắng Sư Phụ Gấu Trúc chỉ là luyện tập
+      if (r.stage === 6 && !L?.s) send(W.s, { t: 'toast', text: 'Luyện tập tốt lắm! Nhiệm vụ cần thắng một người chơi khác mới được tốt nghiệp nha.' });
+      if (r.stage === 6 && L?.s) {
         r.stage = 7; r.graduated = true;
         addExp(W.s, 100);
         system(`🎓 ${r.name} đã tốt nghiệp Khóa Học Trưởng Thành!`);

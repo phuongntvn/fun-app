@@ -302,7 +302,7 @@ test('hành trình đầy đủ: hoa hồng → rương → Thần Sông → câ
   assert.strictEqual(saved.tokenAAAA1.species, 'croc');
 });
 
-test('tỷ thí với Sư Phụ Gấu Trúc khi chơi một mình', { timeout: 60000 }, async () => {
+test('Sư Phụ Gấu Trúc chỉ để luyện tập, thắng không được tốt nghiệp', { timeout: 60000 }, async () => {
   const dataFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'tv-')), 'players.json');
   fs.writeFileSync(dataFile, JSON.stringify({ tokenSOLO01: { token: 'tokenSOLO01', name: 'Chuột', species: 'hamster', skin: 0, level: 1, exp: 0, roses: 0, fish: 0, chest: 0, key: 0, giftsOpened: 1, stage: 6 } }));
   const game = createGame({ dataFile, port: 0, host: '127.0.0.1', random: () => 0.01, timing: { pkCountdown: 50 } });
@@ -332,10 +332,11 @@ test('tỷ thí với Sư Phụ Gấu Trúc khi chơi một mình', { timeout: 6
     assert.ok(end, 'trận đấu kết thúc');
     assert.ok(a.msgs.some((m) => m.t === 'pkHit' && m.by === npcKey), 'gấu trúc có đánh trả');
     assert.strictEqual(end.winner, a.id);
-    await a.wait((m) => m.t === 'story');
-    await sleep(30);
-    assert.strictEqual(a.progress.stage, 7);
+    await a.wait((m) => m.t === 'toast' && /người chơi khác/.test(m.text));
     await a.wait((m) => m.t === 'npcGone' && m.key === npcKey, 4000);
+    assert.ok(!a.msgs.some((m) => m.t === 'story'), 'không có câu chuyện tốt nghiệp');
+    assert.strictEqual(a.progress.stage, 6, 'vẫn ở nhiệm vụ tỷ thí');
+    assert.ok(!a.progress.graduated);
     assert.strictEqual(game.senseis.size, 0);
   } finally {
     a.ws.close();
